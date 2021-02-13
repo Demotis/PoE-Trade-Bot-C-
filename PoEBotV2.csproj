@@ -80,8 +80,11 @@
     <Compile Include="PoEBotV2\Interfaces\ICustomerManager.cs" />
     <Compile Include="PoEBotV2\Interfaces\IDetector.cs" />
     <Compile Include="PoEBotV2\Interfaces\ILogReader.cs" />
+    <Compile Include="PoEBotV2\Interfaces\IPoELogParser.cs" />
     <Compile Include="PoEBotV2\Interfaces\IPoEManager.cs" />
     <Compile Include="PoEBotV2\Interfaces\IScreenCapture.cs" />
+    <Compile Include="PoEBotV2\Services\LogReader.cs" />
+    <Compile Include="PoEBotV2\Services\PoELogParser.cs" />
     <Compile Include="Services\OpenCV_Service.cs" />
     <Compile Include="Services\ScreenCapture.cs" />
     <Compile Include="BotEngine.cs" />
