@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoE-Trade-Bot", "PoE-Trade-Bot.csproj", "{CCE60936-F6E3-4812-84D5-ACDDE1703569}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoEBotV2", "PoEBotV2.csproj", "{CCE60936-F6E3-4812-84D5-ACDDE1703569}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

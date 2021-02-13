@@ -1,13 +1,5 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Permissions;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
-using System.Threading.Tasks;
+﻿using System;
+using PoEBotV2;
 
 namespace PoE_Trade_Bot
 {
@@ -17,9 +9,7 @@ namespace PoE_Trade_Bot
         [STAThread]
         static void Main(string[] args)
         {
-            var Bot_Engine = new BotEngine();
-            Bot_Engine.StartBot();
-
+            Bot bot = new Bot();
         }
     }
 }
