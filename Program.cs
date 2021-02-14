@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using PoEBotV2;
 using PoEBotV2.Services;
 
@@ -12,7 +14,10 @@ namespace PoE_Trade_Bot
             Bot bot = new Bot();
 
             LogReader logReader = new LogReader();
-            await logReader.startAsync("D:\\test\\");
+
+            await logReader.startAsync("D:\\test\\", (List<string> results) => {
+                Console.WriteLine(String.Join("\n", results));
+            });
         }
     }
 }

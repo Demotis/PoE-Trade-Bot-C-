@@ -5,24 +5,33 @@ using System.Threading.Tasks;
 
 namespace PoEBotV2.Services
 {
+    public delegate void OnEndRead(List<string> results);
+
     class LogReader
     {
         private int lastIndex = -1;
+        public string LogFilter { get; } = "a24 [INFO Client";
+
+        public LogReader(string logFilter)
+        {
+            LogFilter = logFilter;
+        }
 
         public LogReader()
         {
-
         }
 
-        public async Task startAsync(string logDir)
+        public async Task startAsync(string logDir, OnEndRead onEndRead)
         {
+            FileSystemEventHandler callback = (object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
+
             using (FileSystemWatcher watcher = new FileSystemWatcher())
             {
                 watcher.NotifyFilter = NotifyFilters.LastWrite;
 
                 watcher.Path = logDir;
-                watcher.Changed += OnChanged;
-                watcher.Created += OnChanged;
+                watcher.Changed += callback;
+                watcher.Created += callback;
 
                 watcher.EnableRaisingEvents = true;
 
@@ -30,16 +39,7 @@ namespace PoEBotV2.Services
             }
         }
 
-        private void OnChanged(object source, FileSystemEventArgs e)
-        {
-            Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
-
-            var res = ReadLogs(e.FullPath);
-
-            Console.WriteLine(String.Join("\n", res));
-        }
-
-        private List<string> ReadLogs(string filePath)
+        private void ReadLogs(string filePath, OnEndRead onEndRead)
         {
             var result = new List<string>();
             int lineIndex = 0;
@@ -54,7 +54,7 @@ namespace PoEBotV2.Services
 
                     if (lineIndex > lastIndex)
                     {
-                        if (lastLine.Contains("a24 [INFO Client"))
+                        if (lastLine.Contains(LogFilter))
                         {
                             result.Add(lastLine);
                         }
@@ -64,10 +64,10 @@ namespace PoEBotV2.Services
                 streanReader.Dispose();
                 fileStream.Dispose();
 
-                if (lineIndex > lastIndex) lastIndex = lineIndex;
+                lastIndex = lineIndex;
             }
 
-            return result;
+            onEndRead(result);
         }
     }
 }
