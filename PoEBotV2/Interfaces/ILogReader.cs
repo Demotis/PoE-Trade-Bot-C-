@@ -1,6 +1,11 @@
-﻿namespace PoEBotV2.Interfaces
+﻿using PoEBotV2.Services;
+
+using System.Threading.Tasks;
+
+namespace PoEBotV2.Interfaces
 {
-    interface ILogReader
+    public interface ILogReader
     {
+        Task StartAsync(string logDir, OnEndRead onEndRead);
     }
 }

@@ -12,18 +12,10 @@ namespace PoE_Trade_Bot
     {
         public static void Main(string[] args)
         {
-            Bot bot = new Bot();
-
             LogReader logReader = new LogReader();
+            Bot bot = new Bot(logReader);
 
-            var logReaderTask = logReader.StartAsync("D:\\test\\", (List<string> results) =>
-            {
-                Console.WriteLine(String.Join("\n", results));
-            });
-
-            Console.WriteLine("Cont");
-
-            Task.WaitAll(logReaderTask);
+            Task.WaitAll(bot.StartAsync());
         }
     }
 }

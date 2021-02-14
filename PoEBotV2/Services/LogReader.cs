@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PoEBotV2.Interfaces;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace PoEBotV2.Services
 {
     public delegate void OnEndRead(List<string> results);
 
-    class LogReader
+    class LogReader : ILogReader
     {
         private int lastIndex = -1;
         public string LogFilter { get; } = "a24 [INFO Client";
