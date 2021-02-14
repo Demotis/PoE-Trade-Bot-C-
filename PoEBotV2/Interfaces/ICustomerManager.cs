@@ -1,7 +1,10 @@
 ﻿
-namespace PoE_Trade_Bot.PoEBotV2.Interfaces
+using System.Threading.Tasks;
+
+namespace PoEBotV2.Interfaces
 {
-    interface ICustomerManager
+    public interface ICustomerManager
     {
+        Task StartAsync();
     }
 }

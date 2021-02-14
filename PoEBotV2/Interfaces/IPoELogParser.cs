@@ -1,7 +1,9 @@
-﻿namespace PoEBotV2.Interfaces
-{
-    interface IPoELogParser
-    {
+﻿using PoEBotV2.Types;
 
+namespace PoEBotV2.Interfaces
+{
+    public interface IPoELogParser
+    {
+        CustomerList ParseLogs(PoELogList logList);
     }
 }

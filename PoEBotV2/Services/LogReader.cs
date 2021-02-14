@@ -1,28 +1,35 @@
 ﻿using PoEBotV2.Interfaces;
+using PoEBotV2.Types;
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PoEBotV2.Services
 {
-    public delegate void OnEndRead(List<string> results);
+    public delegate void OnEndRead(PoELogList results);
 
     class LogReader : ILogReader
     {
         private int lastIndex = -1;
         public string LogFilter { get; } = "a24 [INFO Client";
+        public string LogDirPath { get; }
 
-        public LogReader(string logFilter)
+        public LogReader(string logFilter, string logDirPath)
         {
             LogFilter = logFilter;
+            LogDirPath = logDirPath;
         }
 
-        public LogReader()
+        public LogReader(string logDirPath)
         {
+            LogDirPath = logDirPath;
         }
 
-        public async Task StartAsync(string logDir, OnEndRead onEndRead)
+        public async Task StartAsync(OnEndRead onEndRead)
         {
             void callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
 
@@ -30,7 +37,7 @@ namespace PoEBotV2.Services
             {
                 watcher.NotifyFilter = NotifyFilters.LastWrite;
 
-                watcher.Path = logDir;
+                watcher.Path = LogDirPath;
                 watcher.Changed += callback;
                 watcher.Created += callback;
 
@@ -42,7 +49,7 @@ namespace PoEBotV2.Services
 
         private void ReadLogs(string filePath, OnEndRead onEndRead)
         {
-            var result = new List<string>();
+            var result = new PoELogList();
             int lineIndex = 0;
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -55,10 +62,7 @@ namespace PoEBotV2.Services
 
                     if (lineIndex > lastIndex)
                     {
-                        if (lastLine.Contains(LogFilter))
-                        {
-                            result.Add(lastLine);
-                        }
+                        if (CheckIsNewLog(lastLine)) result.Add(lastLine);
                     }
                 }
 
@@ -69,6 +73,18 @@ namespace PoEBotV2.Services
             }
 
             onEndRead(result);
+        }
+
+        private bool CheckIsNewLog(string logLine)
+        {
+            //2020/11/19 22:04:46
+            Match match = Regex.Match(logLine, @"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})");
+
+            if (!match.Success) return false;
+
+            DateTime dt = DateTime.ParseExact(match.Value, @"yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+            return DateTime.Now.AddMinutes(-1) < dt;
         }
     }
 }

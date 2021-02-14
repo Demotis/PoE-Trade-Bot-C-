@@ -6,6 +6,6 @@ namespace PoEBotV2.Interfaces
 {
     public interface ILogReader
     {
-        Task StartAsync(string logDir, OnEndRead onEndRead);
+        Task StartAsync(OnEndRead onEndRead);
     }
 }

@@ -20,7 +20,7 @@ namespace PoEBotV2
 
         public async Task StartAsync()
         {
-            await LogReader.StartAsync("D:\\test\\", OnEndRead);
+            await LogReader.StartAsync(OnEndRead);
         }
 
         private void OnEndRead(List<string> result)
