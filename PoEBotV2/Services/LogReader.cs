@@ -21,9 +21,9 @@ namespace PoEBotV2.Services
         {
         }
 
-        public async Task startAsync(string logDir, OnEndRead onEndRead)
+        public async Task StartAsync(string logDir, OnEndRead onEndRead)
         {
-            FileSystemEventHandler callback = (object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
+            void callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
 
             using (FileSystemWatcher watcher = new FileSystemWatcher())
             {
