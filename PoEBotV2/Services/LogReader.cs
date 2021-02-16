@@ -10,17 +10,11 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 {
     public delegate void OnEndRead(PoELogList results);
 
-    class LogReader : ILogReader
+    internal class LogReader : ILogReader
     {
-        private int lastIndex = -1;
-        public string LogFilter { get; } = "a24 [INFO Client";
-        public string LogDirPath { get; }
+        private int _lastIndex = -1;
+        private string LogDirPath { get; }
 
-        public LogReader(string logFilter, string logDirPath)
-        {
-            LogFilter = logFilter;
-            LogDirPath = logDirPath;
-        }
 
         public LogReader(string logDirPath)
         {
@@ -29,55 +23,48 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 
         public async Task StartAsync(OnEndRead onEndRead)
         {
-            void callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
+            void Callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
 
-            using (FileSystemWatcher watcher = new FileSystemWatcher())
-            {
-                watcher.NotifyFilter = NotifyFilters.LastWrite;
+            using var watcher = new FileSystemWatcher {NotifyFilter = NotifyFilters.LastWrite, Filter = @"*.txt", Path = LogDirPath};
 
-                watcher.Filter = @"*.txt";
-                watcher.Path = LogDirPath;
-                watcher.Changed += callback;
-                watcher.Created += callback;
+            watcher.Changed += Callback;
+            watcher.Created += Callback;
 
-                watcher.EnableRaisingEvents = true;
+            watcher.EnableRaisingEvents = true;
 
-                while (true) await Task.Delay(100);
-            }
+            while (true) await Task.Delay(100);
         }
 
         private void ReadLogs(string filePath, OnEndRead onEndRead)
         {
             var result = new PoELogList();
-            int lineIndex = 0;
+            var lineIndex = 0;
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using (var streanReader = new StreamReader(fileStream))
+            using (var streamReader = new StreamReader(fileStream))
             {
-                while (!streanReader.EndOfStream)
+                while (!streamReader.EndOfStream)
                 {
                     lineIndex++;
-                    var lastLine = streanReader.ReadLine();
+                    var lastLine = streamReader.ReadLine();
 
-                    if (lineIndex > lastIndex)
-                    {
-                        if (CheckIsNewLog(lastLine)) result.Add(lastLine);
-                    }
+                    if (lineIndex <= _lastIndex) continue;
+                    if (CheckIsNewLog(lastLine)) result.Add(lastLine);
                 }
 
-                streanReader.Dispose();
+                streamReader.Dispose();
                 fileStream.Dispose();
 
-                lastIndex = lineIndex;
+                _lastIndex = lineIndex;
             }
 
             onEndRead(result);
         }
 
-        private bool CheckIsNewLog(string logLine)
+        private static bool CheckIsNewLog(string logLine)
         {
             //2020/11/19 22:04:46
-            Match match = Regex.Match(logLine, @"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})");
+            var match = Regex.Match(logLine, @"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})");
 
             if (!match.Success) return false;
 
