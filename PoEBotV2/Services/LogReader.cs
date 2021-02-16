@@ -37,6 +37,7 @@ namespace PoEBotV2.Services
             {
                 watcher.NotifyFilter = NotifyFilters.LastWrite;
 
+                watcher.Filter = @"*.txt";
                 watcher.Path = LogDirPath;
                 watcher.Changed += callback;
                 watcher.Created += callback;
@@ -82,9 +83,10 @@ namespace PoEBotV2.Services
 
             if (!match.Success) return false;
 
-            DateTime dt = DateTime.ParseExact(match.Value, @"yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-            return DateTime.Now.AddMinutes(-1) < dt;
+            var dt = DateTime.ParseExact(match.Value, @"yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+            var now = DateTime.Now.AddMinutes(-5);
+            
+            return now <= dt;
         }
     }
 }
