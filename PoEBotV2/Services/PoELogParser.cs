@@ -1,7 +1,7 @@
-﻿using PoEBotV2.Interfaces;
+﻿using PoE_Trade_Bot.PoEBotV2.Interfaces;
 using PoEBotV2.Types;
 
-namespace PoEBotV2.Services
+namespace PoE_Trade_Bot.PoEBotV2.Services
 {
     class PoELogParser : IPoELogParser
     {

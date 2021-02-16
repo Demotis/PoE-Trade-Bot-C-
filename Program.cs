@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2;
+using PoE_Trade_Bot.PoEBotV2.Services;
 using PoEBotV2;
-using PoEBotV2.Services;
 
 namespace PoE_Trade_Bot
 {

@@ -1,9 +1,8 @@
-﻿using PoEBotV2.Interfaces;
+﻿using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2.Interfaces;
 using PoEBotV2.Types;
 
-using System.Threading.Tasks;
-
-namespace PoEBotV2.Services
+namespace PoE_Trade_Bot.PoEBotV2.Services
 {
     class CustomerManager : ICustomerManager
     {

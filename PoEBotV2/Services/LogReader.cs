@@ -1,14 +1,12 @@
-﻿using PoEBotV2.Interfaces;
-using PoEBotV2.Types;
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2.Interfaces;
+using PoEBotV2.Types;
 
-namespace PoEBotV2.Services
+namespace PoE_Trade_Bot.PoEBotV2.Services
 {
     public delegate void OnEndRead(PoELogList results);
 

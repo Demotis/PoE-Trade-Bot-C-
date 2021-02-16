@@ -1,10 +1,9 @@
-﻿using PoEBotV2.Interfaces;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2.Interfaces;
 
-namespace PoEBotV2
+namespace PoE_Trade_Bot.PoEBotV2
 {
     public class Bot
     {

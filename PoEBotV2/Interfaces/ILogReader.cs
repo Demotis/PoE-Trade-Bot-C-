@@ -1,8 +1,7 @@
-﻿using PoEBotV2.Services;
+﻿using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2.Services;
 
-using System.Threading.Tasks;
-
-namespace PoEBotV2.Interfaces
+namespace PoE_Trade_Bot.PoEBotV2.Interfaces
 {
     public interface ILogReader
     {

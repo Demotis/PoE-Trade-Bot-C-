@@ -1,6 +1,5 @@
-﻿using PoEBotV2.Models;
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using PoE_Trade_Bot.PoEBotV2.Models;
 
 namespace PoEBotV2.Types
 {

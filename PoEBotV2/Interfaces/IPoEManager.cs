@@ -1,4 +1,4 @@
-﻿namespace PoEBotV2.Interfaces
+﻿namespace PoE_Trade_Bot.PoEBotV2.Interfaces
 {
     class IPoEManager
     {
