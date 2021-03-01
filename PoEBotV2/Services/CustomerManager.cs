@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+
 using PoE_Trade_Bot.PoEBotV2.Interfaces;
+
 using PoEBotV2.Types;
 
 namespace PoE_Trade_Bot.PoEBotV2.Services
@@ -8,11 +10,11 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
     {
         public ILogReader LogReader { get; }
         public IPoELogParser PoELogParser { get; }
-
-        private readonly CustomerList customers;
+        public CustomerList Customers { get; }
 
         public CustomerManager(ILogReader logReader, IPoELogParser poELogParser)
         {
+            Customers = new CustomerList();
             LogReader = logReader;
             PoELogParser = poELogParser;
         }
@@ -25,7 +27,7 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
         public void OnChangeLog(PoELogList newLogs)
         {
             var customers = PoELogParser.ParseLogs(newLogs);
-            this.customers.AddRange(customers);
+            Customers.AddRange(customers);
         }
     }
 }

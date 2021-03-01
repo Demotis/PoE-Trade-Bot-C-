@@ -1,5 +1,9 @@
 ﻿using PoE_Trade_Bot.PoEBotV2.Interfaces;
+using PoE_Trade_Bot.PoEBotV2.Models;
+
 using PoEBotV2.Types;
+
+using System.Collections.Generic;
 
 namespace PoE_Trade_Bot.PoEBotV2.Services
 {
@@ -7,6 +11,18 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
     {
         public CustomerList ParseLogs(PoELogList logList)
         {
+            var poeLogs = new List<PoELog>();
+
+            foreach (var item in logList)
+            {
+                if (item.Contains("@From"))
+                {
+
+                }
+            }
+
+
+
             return new CustomerList();
             //throw new System.NotImplementedException();
         }
@@ -160,5 +176,16 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 
         }
 
+
+        // @From (?<nickname>.*?):
+
+        // many
+        // Hi, I'd like to buy your (?<count>\d+?) (?<product>.+?) for my (?<price>\d+?) (?<currency>.+?) in
+
+        // one
+        //Hi, I would like to buy your (?<product>.*?) listed for (?<price>\d*?) (?<currency>.+?) in
+
+        // stash tab "(?<tab>.+?)"
+        // stash tab "(?<tab>.+?)"; position: left (?<left>\d+?), top (?<top>\d+?)\)
     }
 }
