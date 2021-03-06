@@ -1,32 +1,58 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using PoE_Trade_Bot.PoEBotV2.Interfaces;
+using PoE_Trade_Bot.PoEBotV2.Services;
 
 namespace PoE_Trade_Bot.PoEBotV2
 {
     public class Bot
     {
-        public ILogReader LogReader { get; }
-
-        private List<string> logs;
-
-        public Bot(ILogReader logReader)
-        {
-            LogReader = logReader;
-            logs = new List<string>();
-        }
+        private readonly PoELogManager _logManager;
 
         public async Task StartAsync()
         {
-            await LogReader.StartAsync(OnEndRead);
+            await _logManager.StartAsync();
         }
 
-        private void OnEndRead(List<string> result)
+        public Bot(PoELogManager logManager)
         {
-            Console.WriteLine(String.Join("\n", result));
-            logs.AddRange(result);
+            _logManager = logManager;
+
+            _logManager.OnAfk += OnAfk;
+            _logManager.OnOffer += OnOffer;
+            _logManager.OnTradeAccepted += OnTradeAccepted;
+            _logManager.OnTradeCanceled += OnTradeCanceled;
+            _logManager.OnUserJoinedAtArea += OnUserJoinedAtArea;
+            _logManager.OnUserNotFoundAtArea += OnUserNotFoundAtArea;
+        }
+
+        private void OnUserNotFoundAtArea()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnUserJoinedAtArea()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnTradeCanceled()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnTradeAccepted()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnOffer()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void OnAfk()
+        {
+            throw new NotImplementedException();
         }
     }
-
 }

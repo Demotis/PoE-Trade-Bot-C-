@@ -4,28 +4,27 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PoE_Trade_Bot.PoEBotV2.Interfaces;
-using PoEBotV2.Types;
 
 namespace PoE_Trade_Bot.PoEBotV2.Services
 {
-    public delegate void OnEndRead(PoELogList results);
-
     internal class LogReader : ILogReader
     {
         private int _lastIndex = -1;
-        private string LogDirPath { get; }
 
+        private readonly string _logDirPath;
+        public event ReadLineHandler OnReadLine;
 
         public LogReader(string logDirPath)
         {
-            LogDirPath = logDirPath;
+            _logDirPath = logDirPath;
         }
 
-        public async Task StartAsync(OnEndRead onEndRead)
+        public async Task StartAsync()
         {
-            void Callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath, onEndRead);
+            void Callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath);
 
-            using var watcher = new FileSystemWatcher {NotifyFilter = NotifyFilters.LastWrite, Filter = @"*.txt", Path = LogDirPath};
+            using var watcher = new FileSystemWatcher
+                {NotifyFilter = NotifyFilters.LastWrite, Filter = @"*.txt", Path = _logDirPath};
 
             watcher.Changed += Callback;
             watcher.Created += Callback;
@@ -35,30 +34,34 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
             while (true) await Task.Delay(100);
         }
 
-        private void ReadLogs(string filePath, OnEndRead onEndRead)
+        private void ReadLogs(string filePath)
         {
-            var result = new PoELogList();
             var lineIndex = 0;
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using (var streamReader = new StreamReader(fileStream))
+            using var streamReader = new StreamReader(fileStream);
+
+            while (!streamReader.EndOfStream)
             {
-                while (!streamReader.EndOfStream)
+                lineIndex++;
+                var lastLine = streamReader.ReadLine();
+
+                if (lineIndex <= _lastIndex) continue;
+
+                if (CheckIsNewLog(lastLine))
                 {
-                    lineIndex++;
-                    var lastLine = streamReader.ReadLine();
-
-                    if (lineIndex <= _lastIndex) continue;
-                    if (CheckIsNewLog(lastLine)) result.Add(lastLine);
+                    OnReadLine?.Invoke(new ReadLineEventArgs
+                    {
+                        Line = lastLine,
+                        CreatedAt = DateTime.Now
+                    });
                 }
-
-                streamReader.Dispose();
-                fileStream.Dispose();
-
-                _lastIndex = lineIndex;
             }
 
-            onEndRead(result);
+            streamReader.Dispose();
+            fileStream.Dispose();
+
+            _lastIndex = lineIndex;
         }
 
         private static bool CheckIsNewLog(string logLine)
@@ -70,7 +73,7 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 
             var dt = DateTime.ParseExact(match.Value, @"yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
             var now = DateTime.Now.AddMinutes(-5);
-            
+
             return now <= dt;
         }
     }

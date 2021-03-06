@@ -6,4 +6,8 @@
         <RootNamespace>PoE_Trade_Bot</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="PoEBotV2\Delegates" />
+    </ItemGroup>
+
 </Project>
