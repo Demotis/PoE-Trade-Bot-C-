@@ -23,15 +23,19 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
         {
             void Callback(object _, FileSystemEventArgs e) => ReadLogs(e.FullPath);
 
-            using var watcher = new FileSystemWatcher
-                {NotifyFilter = NotifyFilters.LastWrite, Filter = @"*.txt", Path = _logDirPath};
+            using (var watcher = new FileSystemWatcher())
+            {
+                watcher.NotifyFilter = NotifyFilters.LastWrite;
+                watcher.Filter = @"*.txt";
+                watcher.Path = _logDirPath;
 
-            watcher.Changed += Callback;
-            watcher.Created += Callback;
+                watcher.Changed += Callback;
+                watcher.Created += Callback;
 
-            watcher.EnableRaisingEvents = true;
+                watcher.EnableRaisingEvents = true;
 
-            while (true) await Task.Delay(100);
+                while (true) await Task.Delay(100);
+            }
         }
 
         private void ReadLogs(string filePath)

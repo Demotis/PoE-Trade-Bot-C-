@@ -1,32 +1,11 @@
-﻿using PoE_Trade_Bot.PoEBotV2.Interfaces;
+﻿using System;
+using PoE_Trade_Bot.PoEBotV2.Interfaces;
 using PoE_Trade_Bot.PoEBotV2.Models;
-
-using PoEBotV2.Types;
-
-using System.Collections.Generic;
 
 namespace PoE_Trade_Bot.PoEBotV2.Services
 {
     class PoELogParser : IPoELogParser
     {
-        public CustomerList ParseLogs(PoELogList logList)
-        {
-            var poeLogs = new List<PoELog>();
-
-            foreach (var item in logList)
-            {
-                if (item.Contains("@From"))
-                {
-
-                }
-            }
-
-
-
-            return new CustomerList();
-            //throw new System.NotImplementedException();
-        }
-
         private void GetInfo(string log24)
         {
             ////GetFullInfoCustomer
@@ -173,9 +152,7 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
             //        IsAfk = false;
             //    }
             //}
-
         }
-
 
         // @From (?<nickname>.*?):
 
@@ -187,5 +164,58 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 
         // stash tab "(?<tab>.+?)"
         // stash tab "(?<tab>.+?)"; position: left (?<left>\d+?), top (?<top>\d+?)\)
+
+
+        // public bool ParseAfkOn(string logLine) => logLine.Contains("AFK mode is now ON. Autoreply");
+        //
+        // public bool ParseAfkOff(string logLine) => logLine.Contains("AFK mode is now OFF");
+
+        public void ParseAfkOn(string logLine, Action callback)
+        {
+            if (logLine.Contains("AFK mode is now ON. Autoreply"))
+                callback?.Invoke();
+        }
+
+        public void ParseAfkOff(string logLine, Action callback)
+        {
+            if (logLine.Contains("AFK mode is now OFF"))
+                callback?.Invoke();
+        }
+
+        public void ParseOffer(string logLine, Action<Offer> callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ParseTradeAccepted(string logLine, Action callback)
+        {
+            if (logLine.Contains(": Trade accepted.")) callback?.Invoke();
+        }
+
+        public void ParseTradeCanceled(string logLine, Action callback)
+        {
+            if (logLine.Contains(": Trade cancelled.")) callback?.Invoke();
+        }
+
+        public void ParseUserJoinedAtArea(string logLine, Action<string> callback)
+        {
+            if (!logLine.Contains("has joined the area")) return;
+
+            var username = ParseUsername(logLine);
+
+            callback?.Invoke(username);
+        }
+
+        public void ParseUserNotFoundAtArea(string logLine, Action callback)
+        {
+            if (logLine.Contains("Player not found in this area."))
+                callback?.Invoke();
+        }
+
+
+        public string ParseUsername(string logLine)
+        {
+            return null;
+        }
     }
 }

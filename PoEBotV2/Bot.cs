@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using PoE_Trade_Bot.PoEBotV2.Models;
 using PoE_Trade_Bot.PoEBotV2.Services;
 
 namespace PoE_Trade_Bot.PoEBotV2
@@ -17,7 +18,7 @@ namespace PoE_Trade_Bot.PoEBotV2
         {
             _logManager = logManager;
 
-            _logManager.OnAfk += OnAfk;
+            _logManager.OnAfkOn += OnAfkOn;
             _logManager.OnOffer += OnOffer;
             _logManager.OnTradeAccepted += OnTradeAccepted;
             _logManager.OnTradeCanceled += OnTradeCanceled;
@@ -30,7 +31,7 @@ namespace PoE_Trade_Bot.PoEBotV2
             throw new NotImplementedException();
         }
 
-        private void OnUserJoinedAtArea()
+        private void OnUserJoinedAtArea(string username)
         {
             throw new NotImplementedException();
         }
@@ -45,12 +46,12 @@ namespace PoE_Trade_Bot.PoEBotV2
             throw new NotImplementedException();
         }
 
-        private void OnOffer()
+        private void OnOffer(Offer offer)
         {
             throw new NotImplementedException();
         }
 
-        private void OnAfk()
+        private void OnAfkOn()
         {
             throw new NotImplementedException();
         }
