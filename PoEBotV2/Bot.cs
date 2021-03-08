@@ -48,7 +48,9 @@ namespace PoE_Trade_Bot.PoEBotV2
 
         private void OnOffer(Offer offer)
         {
-            throw new NotImplementedException();
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(offer);
+            
+            Console.WriteLine(json);
         }
 
         private void OnAfkOn()

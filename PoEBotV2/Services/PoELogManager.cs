@@ -49,8 +49,6 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
         {
             var line = args.Line;
             
-            Console.WriteLine(line);
-
             _logParser.ParseUserNotFoundAtArea(line, () => OnUserNotFoundAtArea?.Invoke());
 
             _logParser.ParseUserJoinedAtArea(line, username => OnUserJoinedAtArea?.Invoke(username));
