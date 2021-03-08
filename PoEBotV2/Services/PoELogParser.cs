@@ -49,7 +49,7 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
             
             var currencyName = match.Groups["currencyName"].Value;
 
-            var currency = CurrencyStorage.GetCurrencyByTypeName(currencyName);
+            var currency = CurrencyStorage.FindCurrencyByTypeName(currencyName);
             
             var price = Price.Create(offerPrice, currency);
             
@@ -73,7 +73,7 @@ namespace PoE_Trade_Bot.PoEBotV2.Services
 
             var currencyName = match.Groups["currencyName"].Value;
 
-            var currency = CurrencyStorage.GetCurrencyByTypeName(currencyName);
+            var currency = CurrencyStorage.FindCurrencyByTypeName(currencyName);
 
             var price = Price.Create(offerPrice, currency, forCount);
 
