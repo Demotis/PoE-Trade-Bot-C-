@@ -12,8 +12,12 @@ namespace PoE_Trade_Bot.PoEBotV2
 
         public async Task StartAsync()
         {
+            Console.WriteLine("Bot launched. First load currencies. Please wait...");
+            
             // First load, for correct work
             await _currencyManager.StartAsync();
+
+            Console.WriteLine("Currencies loaded. We are monitoring PoE logs");
 
             Task.WaitAll(
                 _currencyManager.StartAsync(true),
