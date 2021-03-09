@@ -1,16 +1,20 @@
 ﻿using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using PoE_Trade_Bot.PoEBotV2;
 using PoE_Trade_Bot.PoEBotV2.Services;
-using PoEBotV2;
 
 namespace PoE_Trade_Bot
 {
     class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var path = args.ElementAtOrDefault(0) ?? @"D:/test/";
+
+            HttpClient client = new HttpClient();
+
+            CurrencyManager currencyManager = new CurrencyManager(client);
 
             LogReader logReader = new LogReader(path);
 
@@ -18,9 +22,9 @@ namespace PoE_Trade_Bot
 
             PoELogManager logManager = new PoELogManager(logReader, logParser);
 
-            Bot bot = new Bot(logManager);
+            Bot bot = new Bot(logManager, currencyManager);
 
-            Task.WaitAll(bot.StartAsync());
+            await bot.StartAsync();
         }
     }
 }

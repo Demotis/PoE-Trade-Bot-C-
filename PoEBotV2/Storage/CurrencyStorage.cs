@@ -11,5 +11,15 @@ namespace PoE_Trade_Bot.PoEBotV2.Storage
         {
             return Currencies.Find(currency => currency.ItemType.Name == typeName);
         }
+        
+        public static Currency FindCurrencyByType(ItemType type)
+        {
+            return Currencies.Find(currency => currency.ItemType == type);
+        }
+
+        public static void Add(Currency currency)
+        {
+            Currencies.Add(currency);
+        }
     }
 }
