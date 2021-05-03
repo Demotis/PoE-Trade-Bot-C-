@@ -75,7 +75,7 @@ namespace PoE_Trade_Bot
 
         private void CheckExchangeRates()
         {
-            DateTime timer = DateTime.Now + new TimeSpan(0, 30, 0);
+            DateTime timer = DateTime.Now.AddMinutes(30); // + new TimeSpan(0, 30, 0);
 
             while (true)
             {
