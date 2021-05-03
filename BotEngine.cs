@@ -1,286 +1,49 @@
-﻿using Microsoft.Win32;
-using PoE_Trade_Bot.Models;
+﻿using PoE_Trade_Bot.Models;
 using PoE_Trade_Bot.Models.Test;
+using PoE_Trade_Bot.PoEClient;
 using PoE_Trade_Bot.Services;
+using PoE_Trade_Bot.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PoE_Trade_Bot
 {
     public class BotEngine
     {
-        private static string PoE_Path;
-        private static string PoE_Logs_Dir;
-        private static string PoE_Logs_File;
-
-        private Task ReadLogs;
-        private Task ExchangeRatesTask;
 
         private readonly int Top_Stash64 = 135;
         private readonly int Left_Stash64 = 25;
 
-        private List<CustomerInfo> Customer;
-        private List<CustomerInfo> CompletedTrades;
+        public static List<CustomerInfo> Customer;
+        public static List<CustomerInfo> CompletedTrades;
 
         private Tab _Tab;
 
         //current instance customer
-        private Currencies Currencies;
-
-        private bool IsAfk = false;
 
         public BotEngine()
         {
             Customer = new List<CustomerInfo>();
             CompletedTrades = new List<CustomerInfo>();
-
-            var path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\GrindingGearGames\Path of Exile", "InstallLocation", null);
-            if (path != null)
-            {
-                PoE_Path = path.ToString();
-                PoE_Logs_Dir = PoE_Path + @"logs\";
-                PoE_Logs_File = PoE_Logs_Dir + @"\Client.txt";
-            }
-
-            if (!Win32.IsPoERun())
-            {
-                throw new Exception("Path of Exile is not running!");
-            }
-
-
         }
 
         public void StartBot()
         {
-            Currencies = new Currencies();
             _Tab = new Tab();
-
-            ReadLogs = new Task(ReadLogsInBack);
-            ReadLogs.Start();
-
-            ExchangeRatesTask = new Task(CheckExchangeRates);
-            ExchangeRatesTask.Start();
-
             StartTrader_PoEbota();
-
             Console.ReadKey();
         }
 
-        private void CheckExchangeRates()
+        private void ShutdownProcess()
         {
-            DateTime timer = DateTime.Now + new TimeSpan(0, 30, 0);
 
-            while (true)
-            {
-                if (timer <= DateTime.Now)
-                {
-                    Currencies.Update();
-                    timer = DateTime.Now + new TimeSpan(0, 30, 0);
-                }
-
-                Thread.Sleep(1000 * 60 * 5);
-            }
         }
 
-        private void ReadLogsInBack()
-        {
-            Win32.FocusPoEWindow();
-
-            int last_index = -1;
-            bool not_first = false;
-
-            while (true)
-            {
-                var fs = new FileStream(PoE_Logs_File, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using (var sr = new StreamReader(fs))
-                {
-                    int li = 0;
-                    string ll = string.Empty;
-                    while (!sr.EndOfStream)
-                    {
-                        li++;
-                        ll = sr.ReadLine();
-
-                        if (not_first && li > last_index)
-                        {
-                            if (ll.Contains("bad [INFO Client"))
-                            {
-                                Console.WriteLine(ll);
-                                GetInfo(ll);
-                            }
-                        }
-                    }
-
-                    sr.Dispose();
-                    fs.Dispose();
-
-                    if (li > last_index)
-                    {
-                        last_index = li;
-
-                        if (!not_first)
-                            not_first = true;
-                    }
-                }
-                Thread.Sleep(100);
-            }
-        }
-
-        private void GetInfo(string log24)
-        {
-            //GetFullInfoCustomer
-            try
-            {
-                if (log24.Contains("Hi, I would like to buy your") && log24.Contains("@From"))
-                {
-                    var cus_inf = new CustomerInfo();
-
-                    cus_inf.OrderType = CustomerInfo.OrderTypes.SINGLE;
-
-                    int length;
-                    int begin;
-                    //Nickname
-
-                    if (!log24.Contains("> "))
-                    {
-                        begin = log24.IndexOf("@From ") + 6;
-                        length = log24.IndexOf(": ") - begin;
-                        cus_inf.Nickname = log24.Substring(begin, length);
-                    }
-                    else
-                    {
-                        begin = log24.IndexOf("> ") + 2;
-                        length = log24.IndexOf(": ") - begin;
-                        cus_inf.Nickname = log24.Substring(begin, length);
-                    }
-
-
-                    //Product
-                    begin = log24.IndexOf("your ") + 5;
-                    length = log24.IndexOf(" listed") - begin;
-                    cus_inf.Product = log24.Substring(begin, length);
-
-                    //Currency
-                    begin = log24.IndexOf(" in") - 1;
-                    for (int i = 0; i < 50; i++)
-                    {
-                        if (log24[begin - i] == ' ')
-                        {
-                            begin = begin - i + 1;
-                            break;
-                        }
-                    }
-                    length = log24.IndexOf(" in") - begin;
-                    cus_inf.Currency = Currencies.GetCurrencyByName(log24.Substring(begin, length));
-
-                    //Price
-                    begin = log24.IndexOf("for ") + 4;
-                    cus_inf.Cost = GetNumber(begin, log24);
-
-                    //Stash Tab
-                    begin = log24.IndexOf("tab \"") + 5;
-                    length = log24.IndexOf("\"; position") - begin;
-                    cus_inf.Stash_Tab = log24.Substring(begin, length);
-
-                    //left
-                    begin = log24.IndexOf("left ") + 5;
-                    cus_inf.Left = (int)GetNumber(begin, log24);
-
-                    //top
-                    begin = log24.IndexOf("top ") + 4;
-                    cus_inf.Top = (int)GetNumber(begin, log24);
-
-                    //to chaos chaosequivalent
-                    cus_inf.Chaos_Price = cus_inf.Currency.ChaosEquivalent * cus_inf.Cost;
-
-                    //trade accepted
-                    cus_inf.TradeStatus = CustomerInfo.TradeStatuses.STARTED;
-
-                    if (cus_inf.IsReady)
-                    {
-                        Customer.Add(cus_inf);
-
-                        Console.WriteLine(cus_inf.ToString());
-                    }
-                }
-
-                if (log24.Contains("I'd like to buy your") && log24.Contains("@From"))
-                {
-                    var cus = new CustomerInfo();
-
-                    cus.OrderType = CustomerInfo.OrderTypes.MANY;
-
-                    cus.Nickname = Regex.Replace(log24, @"([\w\s\W]+@From )|(: [\w\W\s]*)|(<[\w\W\s]+> )", "");
-
-                    cus.Product = Regex.Replace(log24, @"([\w\W]+your +[\d,]* )|( for+[\w\s\W]*)|( Map [()\d\w]+)", "");
-
-                    string test = Regex.Match(log24, @"your ([\d]+)").Groups[1].Value;
-
-                    cus.NumberProducts = Convert.ToInt32(test);
-
-                    cus.Cost = Convert.ToDouble(Regex.Replace(log24, @"([\s\w\W]+for my )|([\D])", "").Replace(".", ","));
-
-                    cus.Currency = Currencies.GetCurrencyByName(Regex.Replace(log24, @"([\w\s\W]+my +[\d,.]* )|( in +[\w\W\s]*)", ""));
-
-                    if (cus.IsReady)
-                    {
-                        Customer.Add(cus);
-
-                        Console.WriteLine(cus.ToString());
-                    }
-
-                }
-            }
-            catch (Exception e)
-            {
-
-                Console.WriteLine(e.Message);
-            }
-
-            //check area
-            if (Customer.Any())
-            {
-                if (log24.Contains(Customer.First().Nickname) && log24.Contains("has joined the area"))
-                {
-                    Console.WriteLine("He come for product");
-                    Customer.First().IsInArea = true;
-                }
-
-                if (log24.Contains("Player not found in this area."))
-                {
-                    Customer.First().IsInArea = false;
-                }
-
-                if (log24.Contains(": Trade accepted."))
-                {
-                    Customer.First().TradeStatus = CustomerInfo.TradeStatuses.ACCEPTED;
-                }
-
-                if (log24.Contains(": Trade cancelled."))
-                {
-                    Customer.First().TradeStatus = CustomerInfo.TradeStatuses.CANCELED;
-                }
-            }
-            else
-            {
-                if (log24.Contains("AFK mode is now ON. Autoreply"))
-                {
-                    IsAfk = true;
-                }
-                if (log24.Contains("AFK mode is now OFF"))
-                {
-                    IsAfk = false;
-                }
-            }
-
-        }
 
         //Trade Functions
 
@@ -292,7 +55,7 @@ namespace PoE_Trade_Bot
 
             while (true)
             {
-                if ((IsAfk && !Customer.Any()) || (!Customer.Any() && timer < DateTime.Now))
+                if ((ClientManager.Instance.IsAFK && !Customer.Any()) || (!Customer.Any() && timer < DateTime.Now))
                 {
                     if (Win32.GetActiveWindowTitle() != "Path of Exile")
                     {
@@ -303,7 +66,7 @@ namespace PoE_Trade_Bot
 
                     timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
 
-                    IsAfk = false;
+                    ClientManager.Instance.IsAFK = false;
                 }
 
                 if (IsFirstTime)
@@ -314,18 +77,12 @@ namespace PoE_Trade_Bot
 
                         if (!OpenStash())
                         {
-                            Console.WriteLine("");
-
                             IsFirstTime = false;
-
                             throw new Exception("Stash is not found in the area.");
-
                         }
 
                         ClearInventory("recycle_tab");
-
                         ScanTab();
-
                         IsFirstTime = false;
                     }
                 }
@@ -337,7 +94,7 @@ namespace PoE_Trade_Bot
                         Win32.PoE_MainWindow();
                     }
 
-                    Console.WriteLine($"\nTrade start with {Customer.First().Nickname}");
+                    Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
 
                     #region Many items
 
@@ -350,7 +107,7 @@ namespace PoE_Trade_Bot
                             KickFormParty();
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -359,7 +116,7 @@ namespace PoE_Trade_Bot
                             KickFormParty();
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -370,7 +127,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -381,7 +138,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -392,7 +149,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -402,7 +159,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
                     }
@@ -420,7 +177,7 @@ namespace PoE_Trade_Bot
                             KickFormParty();
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -429,7 +186,7 @@ namespace PoE_Trade_Bot
                             KickFormParty();
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -440,7 +197,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -451,7 +208,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -462,7 +219,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
@@ -473,7 +230,7 @@ namespace PoE_Trade_Bot
 
                             Customer.Remove(Customer.First());
 
-                            Console.WriteLine("\nTrade end!");
+                            Logger.Console.Info("\nTrade end!");
                             continue;
                         }
                     }
@@ -492,14 +249,14 @@ namespace PoE_Trade_Bot
 
                     if (!OpenStash())
                     {
-                        Console.WriteLine("Stash not found. I cant clean inventory after trade.");
+                        Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
                     }
                     else
                     {
                         ClearInventory();
                     }
 
-                    Console.WriteLine("Trade comlete sccessfull");
+                    Logger.Console.Info("Trade comlete sccessfull");
                 }
 
                 Thread.Sleep(100);
@@ -513,7 +270,7 @@ namespace PoE_Trade_Bot
                 Win32.PoE_MainWindow();
             }
 
-            Console.WriteLine("Invite in party...");
+            Logger.Console.Info("Invite in party...");
 
             string command = "/invite " + Customer.First().Nickname;
 
@@ -527,7 +284,7 @@ namespace PoE_Trade_Bot
 
             //find stash poition
 
-            Console.WriteLine("Search stash in location...");
+            Logger.Console.Debug("Search stash in location...");
 
             for (int search_pos = 0; search_pos < 20; search_pos++)
             {
@@ -574,7 +331,7 @@ namespace PoE_Trade_Bot
                 Thread.Sleep(500);
             }
 
-            Console.WriteLine("Stash is not found");
+            Logger.Console.Warn("Stash is not found");
 
             return false;
         }
@@ -584,7 +341,7 @@ namespace PoE_Trade_Bot
             Bitmap screen_shot = null;
             Position found_pos = null;
 
-            Console.WriteLine("Search trade tab...");
+            Logger.Console.Debug("Search trade tab...");
 
             for (int count_try = 0; count_try < 16; count_try++)
             {
@@ -630,7 +387,7 @@ namespace PoE_Trade_Bot
 
                 if (product_clip == null || !Customer.First().Product.Contains(product_clip))
                 {
-                    Console.WriteLine("not found item");
+                    Logger.Console.Info("not found item");
 
                     Win32.ChatCommand($"@{Customer.First().Nickname} I sold it, sry");
 
@@ -641,7 +398,7 @@ namespace PoE_Trade_Bot
 
                 if (!IsValidPrice(ctrlc))
                 {
-                    Console.WriteLine("Fake price");
+                    Logger.Console.Info("Fake price");
 
                     Win32.ChatCommand($"@{Customer.First().Nickname} It is not my price!");
 
@@ -662,14 +419,14 @@ namespace PoE_Trade_Bot
 
             }
 
-            Console.WriteLine("Trade tab is not found");
+            Logger.Console.Warn("Trade tab is not found");
 
             return false;
         }
 
         private bool CheckArea()
         {
-            Console.WriteLine("Check area...");
+            Logger.Console.Debug("Check area...");
             for (int i = 0; i < 60; i++)
             {
                 if (Customer.First().IsInArea)
@@ -678,7 +435,7 @@ namespace PoE_Trade_Bot
                 }
                 Thread.Sleep(500);
             }
-            Console.WriteLine("Player not here");
+            Logger.Console.Warn("Player not here");
             return false;
         }
 
@@ -692,7 +449,7 @@ namespace PoE_Trade_Bot
 
             for (int try_count = 0; try_count < 3; try_count++)
             {
-                Console.WriteLine("Try to accept or do trade...");
+                Logger.Console.Debug("Try to accept or do trade...");
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -704,7 +461,7 @@ namespace PoE_Trade_Bot
 
                         if (found_pos.IsVisible)
                         {
-                            Console.WriteLine("I will Accept trade request!");
+                            Logger.Console.Debug("I will Accept trade request!");
 
                             Win32.MoveTo(1030 + found_pos.Left + found_pos.Width / 2, 260 + found_pos.Top + found_pos.Height / 2);
 
@@ -720,7 +477,7 @@ namespace PoE_Trade_Bot
                         }
                         else
                         {
-                            Console.WriteLine("i write trade");
+                            Logger.Console.Debug("i write trade");
                             string trade_command = "/tradewith " + Customer.First().Nickname;
 
                             Win32.ChatCommand(trade_command);
@@ -741,12 +498,12 @@ namespace PoE_Trade_Bot
                             }
                             else
                             {
-                                Console.WriteLine("Check trade window");
+                                Logger.Console.Debug("Check trade window");
                                 screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
                                 found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/trade_window_title.png");
                                 if (found_pos.IsVisible)
                                 {
-                                    Console.WriteLine("I am in trade!");
+                                    Logger.Console.Debug("I am in trade!");
                                     screen_shot.Dispose();
                                     return true;
                                 }
@@ -755,13 +512,13 @@ namespace PoE_Trade_Bot
                     }
                     else
                     {
-                        Console.WriteLine("Check trade window");
+                        Logger.Console.Debug("Check trade window");
                         screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
                         found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/trade_window_title.png");
                         if (found_pos.IsVisible)
                         {
                             screen_shot.Dispose();
-                            Console.WriteLine("I am in trade!");
+                            Logger.Console.Debug("I am in trade!");
                             return true;
                         }
                     }
@@ -818,7 +575,7 @@ namespace PoE_Trade_Bot
 
                         if (Customer.First().Product.Contains(GetNameItem_PoE(ss)))
                         {
-                            Console.WriteLine($"{ss} is found in inventory");
+                            Logger.Console.Debug($"{ss} is found in inventory");
 
                             Win32.CtrlMouseClick();
 
@@ -850,29 +607,29 @@ namespace PoE_Trade_Bot
 
             if (Customer.First().Currency.Name != "chaos orb")
             {
-                main_currs.Add(Currencies.GetCurrencyByName("chaos"));
+                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("chaos"));
             }
 
             if (Customer.First().Currency.Name != "divine orb")
             {
-                main_currs.Add(Currencies.GetCurrencyByName("divine"));
+                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("divine"));
             }
 
             if (Customer.First().Currency.Name != "exalted orb")
             {
-                main_currs.Add(Currencies.GetCurrencyByName("exalted"));
+                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
             }
 
             if (Customer.First().Currency.Name != "orb of alchemy")
             {
-                main_currs.Add(Currencies.GetCurrencyByName("alchemy"));
+                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("alchemy"));
             }
 
             if (Customer.First().Currency.Name == "exalted orb")
             {
-                Win32.ChatCommand($"@{Customer.First().Nickname} exalted orb = {Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
+                Win32.ChatCommand($"@{Customer.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
 
-                main_currs.Add(Currencies.GetCurrencyByName("exalted"));
+                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
             }
 
             Bitmap screen_shot = null;
@@ -902,7 +659,7 @@ namespace PoE_Trade_Bot
 
                         string ctrlc = CtrlC_PoE();
 
-                        var curbyname = Currencies.GetCurrencyByName(GetNameItem_PoE(ctrlc));
+                        var curbyname = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(GetNameItem_PoE(ctrlc));
 
                         if (curbyname == null)
 
@@ -920,11 +677,11 @@ namespace PoE_Trade_Bot
                         break;
                 }
 
-                Console.WriteLine("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + Customer.First().Chaos_Price);
+                Logger.Console.Info("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + Customer.First().Chaos_Price);
 
                 if (price >= Customer.First().Chaos_Price)
                 {
-                    Console.WriteLine("I want accept trade");
+                    Logger.Console.Debug("I want accept trade");
 
                     screen_shot = ScreenCapture.CaptureRectangle(200, 575, 130, 40);
 
@@ -982,7 +739,7 @@ namespace PoE_Trade_Bot
         {
             Position found_pos = null;
 
-            Console.WriteLine($"Search {name_tab} trade tab...");
+            Logger.Console.Debug($"Search {name_tab} trade tab...");
 
             for (int count_try = 0; count_try < 16; count_try++)
             {
@@ -1102,7 +859,7 @@ namespace PoE_Trade_Bot
 
                 Win32.SendKeyInPoE("{ESC}");
 
-                Console.WriteLine("Scan is end!");
+                Logger.Console.Debug("Scan is end!");
             }
             else
             {
@@ -1114,7 +871,7 @@ namespace PoE_Trade_Bot
         {
             Position found_pos = null;
 
-            Console.WriteLine($"Search {name_tab} trade tab...");
+            Logger.Console.Debug($"Search {name_tab} trade tab...");
 
             for (int count_try = 0; count_try < 16; count_try++)
             {
@@ -1176,7 +933,7 @@ namespace PoE_Trade_Bot
 
                         if (!item_info.Contains(i.Name))
                         {
-                            Console.WriteLine("Information incorrect.");
+                            Logger.Console.Info("Information incorrect.");
 
                             return false;
                         }
@@ -1220,14 +977,14 @@ namespace PoE_Trade_Bot
                 }
                 else
                 {
-                    Console.WriteLine("Items not found!");
+                    Logger.Console.Info("Items not found!");
 
                     Win32.ChatCommand($"@{customer.Nickname} maybe I sold it");
                 }
 
             }
 
-            Console.WriteLine("Tab not found");
+            Logger.Console.Warn("Tab not found");
 
             return false;
         }
@@ -1262,7 +1019,7 @@ namespace PoE_Trade_Bot
             }
 
             else
-                Console.WriteLine("Inventory is full");
+                Logger.Console.Fatal("Inventory is full");
         }
 
         private bool PutItems()
@@ -1335,7 +1092,7 @@ namespace PoE_Trade_Bot
                         {
                             screen_shot.Dispose();
 
-                            Console.WriteLine($"I put {TotalAmount} items in trade window");
+                            Logger.Console.Debug($"I put {TotalAmount} items in trade window");
 
                             return true;
                         }
@@ -1355,7 +1112,7 @@ namespace PoE_Trade_Bot
         {
             Position found_pos = null;
 
-            Console.WriteLine($"Search {recycle_tab}...");
+            Logger.Console.Debug($"Search {recycle_tab}...");
 
             Thread.Sleep(500);
 
@@ -1440,28 +1197,6 @@ namespace PoE_Trade_Bot
         }
 
         //util
-        private double GetNumber(int begin, string target)
-        {
-            double result = 0;
-            string buf = string.Empty;
-
-            for (int i = begin; i < begin + 5; i++)
-            {
-                if (target[i] != ' ' && target[i] != ')')
-                {
-                    if (target[i] != '.')
-                        buf += target[i];
-                    else buf += ',';
-                }
-                else
-                {
-                    begin = i + 1;
-                    break;
-                }
-            }
-
-            return result = Convert.ToDouble(buf);
-        }
 
         private int GetStackSize_PoE_Pro(string item_info)
         {
@@ -1586,7 +1321,7 @@ namespace PoE_Trade_Bot
 
                         result = str.Substring(begin, str.Length - begin).Replace("\r", "");
 
-                        if (Currencies.GetCurrencyByName(result).Name == Customer.First().Currency.Name)
+                        if (PoECurrencyManager.Instance.Currencies.GetCurrencyByName(result).Name == Customer.First().Currency.Name)
                         {
                             isvalidcurrency = true;
                         }
@@ -1647,7 +1382,7 @@ namespace PoE_Trade_Bot
 
                 price.ForNumberItems = Convert.ToInt32(Regex.Replace(item_info, @"([\w\s\W]+/)|([^0-9.])", ""));
 
-                price.CurrencyType = Currencies.GetCurrencyByName(Regex.Replace(item_info, @"[\w\s\W]+\d+\s|\n", ""));
+                price.CurrencyType = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(Regex.Replace(item_info, @"[\w\s\W]+\d+\s|\n", ""));
             }
             if (Regex.IsMatch(item_info, @"~price +[0-9.]+\s\D*"))
             {
@@ -1655,7 +1390,7 @@ namespace PoE_Trade_Bot
 
                 price.ForNumberItems = GetStackSize_PoE_Pro(item_info);
 
-                price.CurrencyType = Currencies.GetCurrencyByName(Regex.Replace(item_info, @"[\w\s\W]+\d+\s|\n", ""));
+                price.CurrencyType = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(Regex.Replace(item_info, @"[\w\s\W]+\d+\s|\n", ""));
             }
 
             if (!price.IsSet)

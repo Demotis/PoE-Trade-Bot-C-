@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PoE_Trade_Bot.Services;
+using System;
 
 namespace PoE_Trade_Bot.PoEClient
 {
@@ -8,12 +9,19 @@ namespace PoE_Trade_Bot.PoEClient
         private bool disposedValue;
         public static ClientManager Instance => instance;
 
+        public bool IsAFK { get; set; }
+
         static ClientManager()
         {
         }
 
         private ClientManager()
         {
+            if (!Win32.IsPoERun())
+            {
+                throw new Exception("Path of Exile is not running!");
+            }
+
         }
 
         private void Dispose(bool disposing)
