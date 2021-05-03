@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PoE_Trade_Bot.Utilities;
+using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PoE_Trade_Bot.Services
@@ -75,6 +73,15 @@ namespace PoE_Trade_Bot.Services
 
         [DllImport("user32.dll")]
         static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        public static void FocusPoEWindow()
+        {
+            if (GetActiveWindowTitle() != "Path of Exile")
+            {
+                Logger.Console.Debug("Focus Path of Exile Window.");
+                PoE_MainWindow();
+            }
+        }
 
         public static void PoE_MainWindow()
         {

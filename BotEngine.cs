@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using PoE_Trade_Bot.Models;
+using PoE_Trade_Bot.Models.Test;
 using PoE_Trade_Bot.Services;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using PoE_Trade_Bot.Models.Test;
 
 namespace PoE_Trade_Bot
 {
@@ -53,6 +53,8 @@ namespace PoE_Trade_Bot
             {
                 throw new Exception("Path of Exile is not running!");
             }
+
+
         }
 
         public void StartBot()
@@ -73,7 +75,7 @@ namespace PoE_Trade_Bot
 
         private void CheckExchangeRates()
         {
-            DateTime timer = DateTime.Now + new TimeSpan(0,30,0);
+            DateTime timer = DateTime.Now + new TimeSpan(0, 30, 0);
 
             while (true)
             {
@@ -89,12 +91,7 @@ namespace PoE_Trade_Bot
 
         private void ReadLogsInBack()
         {
-            if (Win32.GetActiveWindowTitle() != "Path of Exile")
-            {
-                Console.WriteLine("Main window is not Path of Exile. ");
-
-                Win32.PoE_MainWindow();
-            }
+            Win32.FocusPoEWindow();
 
             int last_index = -1;
             bool not_first = false;
@@ -113,7 +110,7 @@ namespace PoE_Trade_Bot
 
                         if (not_first && li > last_index)
                         {
-                            if (ll.Contains("a24 [INFO Client"))
+                            if (ll.Contains("bad [INFO Client"))
                             {
                                 Console.WriteLine(ll);
                                 GetInfo(ll);
@@ -416,7 +413,7 @@ namespace PoE_Trade_Bot
 
                     if (Customer.First().OrderType == CustomerInfo.OrderTypes.SINGLE)
                     {
-                         InviteCustomer();
+                        InviteCustomer();
 
                         if (!OpenStash())
                         {
@@ -544,7 +541,8 @@ namespace PoE_Trade_Bot
                     Thread.Sleep(100);
 
                     Win32.DoMouseClick();
-
+                    Thread.Sleep(100);
+                    Win32.DoMouseClick();
                     Thread.Sleep(100);
 
                     Win32.MoveTo(screen_shot.Width / 2, screen_shot.Height / 2);
@@ -922,7 +920,7 @@ namespace PoE_Trade_Bot
                         break;
                 }
 
-                Console.WriteLine("Bid price (in chaos) = " + price + " Necessary (in chaos) = "+ Customer.First().Chaos_Price);
+                Console.WriteLine("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + Customer.First().Chaos_Price);
 
                 if (price >= Customer.First().Chaos_Price)
                 {
@@ -1009,7 +1007,7 @@ namespace PoE_Trade_Bot
                 screen_shot.Dispose();
 
                 Thread.Sleep(500);
-            }            
+            }
 
             if (found_pos.IsVisible)
             {

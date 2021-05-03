@@ -18,7 +18,10 @@ namespace PoE_Trade_Bot.Services
             Bitmap bmp = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppRgb);
             Graphics g = Graphics.FromImage(bmp);
             g.CopyFromScreen(rect.Left, rect.Top, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
-            //bmp.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".bmp", ImageFormat.Jpeg);
+            
+            string guid = Guid.NewGuid().ToString();
+            bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+            //bmp.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".jpg", ImageFormat.Jpeg);
 
             g.Dispose();
 
@@ -29,6 +32,9 @@ namespace PoE_Trade_Bot.Services
             Bitmap bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height, PixelFormat.Format32bppRgb);
             Graphics g = Graphics.FromImage(bmp);
             g.CopyFromScreen(0, 0, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
+
+            string guid = Guid.NewGuid().ToString();
+            bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
             //bmp.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".jpg", ImageFormat.Jpeg);
 
             g.Dispose();

@@ -4,9 +4,6 @@ using PoE_Trade_Bot.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.Services
 {
@@ -21,7 +18,7 @@ namespace PoE_Trade_Bot.Services
         {
             List<Position> res_pos = new List<Position>();
 
-            Image<Bgr, byte> source = new Image<Bgr, byte>(source_img); // Image B
+            Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>(); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(path_template); // Image A
 
             using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
@@ -52,7 +49,8 @@ namespace PoE_Trade_Bot.Services
                     else
                         break;
                 }
-                result.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".png");
+                string guid = Guid.NewGuid().ToString();
+                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
             }
 
             return res_pos;
@@ -62,7 +60,7 @@ namespace PoE_Trade_Bot.Services
         {
             Position res = new Position();
 
-            Image<Bgr, byte> source = new Image<Bgr, byte>(source_img); // Image B
+            Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>(); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(path_template); // Image A
 
             using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
@@ -84,7 +82,8 @@ namespace PoE_Trade_Bot.Services
                         Height = template.Size.Height
                     };
                 }
-                result.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".png");
+                string guid = Guid.NewGuid().ToString();
+                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
 
                 source.Dispose();
                 template.Dispose();
@@ -98,7 +97,7 @@ namespace PoE_Trade_Bot.Services
         {
             Position res = new Position();
 
-            Image<Bgr, byte> source = new Image<Bgr, byte>(source_img); // Image B
+            Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>(); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(path_template); // Image A
 
             using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
@@ -120,7 +119,8 @@ namespace PoE_Trade_Bot.Services
                         Height = template.Size.Height
                     };
                 }
-                result.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".png");
+                string guid = Guid.NewGuid().ToString();
+                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
 
                 source.Dispose();
                 template.Dispose();
@@ -134,7 +134,7 @@ namespace PoE_Trade_Bot.Services
         {
             List<Position> res_pos = new List<Position>();
 
-            Image<Bgr, byte> source = new Image<Bgr, byte>(source_img); // Image B
+            Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>(); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(path_template); // Image A
 
             using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
@@ -165,7 +165,8 @@ namespace PoE_Trade_Bot.Services
                     else
                         break;
                 }
-                result.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".png");
+                string guid = Guid.NewGuid().ToString();
+                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
             }
 
             return res_pos;
@@ -175,7 +176,7 @@ namespace PoE_Trade_Bot.Services
         {
             List<Position> res_pos = new List<Position>();
 
-            Image<Bgr, byte> source = new Image<Bgr, byte>(source_img); // Image B
+            Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>(); // Image B
             Image<Bgr, byte> template = new Image<Bgr, byte>(path_template); // Image A
 
             template = template.Resize(33, 33, Emgu.CV.CvEnum.Inter.Cubic);
@@ -209,10 +210,11 @@ namespace PoE_Trade_Bot.Services
                     else
                         break;
                 }
-                result.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".png");
+                string guid = Guid.NewGuid().ToString();
+                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
             }
 
-            return res_pos;        
+            return res_pos;
         }
     }
 }

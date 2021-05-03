@@ -1,13 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.Models
 {
@@ -57,7 +51,8 @@ namespace PoE_Trade_Bot.Models
 
         public void Update()
         {
-            var response = Client.GetAsync("https://poe.ninja/api/Data/GetCurrencyOverview?league=Betrayal").Result;
+            var poeNinjaAPI = $"https://poe.ninja/api/data/CurrencyOverview?league={ConfigManager.Instance.ApplicationConfig["POENinja_Leage"]}&type=Currency&language=en";
+            var response = Client.GetAsync(poeNinjaAPI).Result;
             var responseBody = response.Content.ReadAsStringAsync().Result;
 
             var ExchangeRatesJson = JsonConvert.DeserializeObject<CurrenciesJson>(responseBody);
@@ -110,7 +105,7 @@ namespace PoE_Trade_Bot.Models
 
         public override string ToString()
         {
-            return Name; 
+            return Name;
         }
     }
 }
