@@ -12,7 +12,9 @@ namespace PoE_Trade_Bot.Utilities
         public static PoECurrencyManager Instance => instance;
 
         private Task ExchangeRatesTask;
-
+        private static Timer TheTimer = null;
+        private DateTime currentTime = DateTime.Now;
+        
         public Currencies Currencies { get; private set; }
 
         static PoECurrencyManager()
@@ -28,7 +30,7 @@ namespace PoE_Trade_Bot.Utilities
 
         private void CheckExchangeRates()
         {
-            DateTime timer = DateTime.Now + new TimeSpan(0, 30, 0);
+            DateTime timer = currentTime.AddMinutes(30);
 
             while (true)
             {
