@@ -22,6 +22,7 @@ namespace PoE_Trade_Bot.PoEClient
         private string path;
         private string logsDir;
         private string logFile;
+       
 
         static LogManager()
         {
