@@ -57,12 +57,9 @@ namespace PoE_Trade_Bot
             {
                 if ((ClientManager.Instance.IsAFK && !Customer.Any()) || (!Customer.Any() && timer < DateTime.Now))
                 {
-                    if (Win32.GetActiveWindowTitle() != "Path of Exile")
-                    {
-                        Win32.PoE_MainWindow();
-                    }
+                    ClientManager.Instance.BringToForeground();
 
-                    Win32.ChatCommand("&I am here");
+                    ClientManager.Instance.ChatCommand("&I am here");
 
                     timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
 
@@ -73,7 +70,7 @@ namespace PoE_Trade_Bot
                 {
                     if (Win32.GetActiveWindowTitle() != "Path of Exile")
                     {
-                        Win32.PoE_MainWindow();
+                        ClientManager.Instance.BringToForeground();
 
                         if (!OpenStash())
                         {
@@ -89,10 +86,7 @@ namespace PoE_Trade_Bot
 
                 if (Customer.Any() && !IsFirstTime)
                 {
-                    if (Win32.GetActiveWindowTitle() != "Path of Exile")
-                    {
-                        Win32.PoE_MainWindow();
-                    }
+                    ClientManager.Instance.BringToForeground();
 
                     Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
 
@@ -239,7 +233,7 @@ namespace PoE_Trade_Bot
 
 
 
-                    Win32.ChatCommand($"@{Customer.First().Nickname} ty gl");
+                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} ty gl");
 
                     KickFormParty();
 
@@ -265,16 +259,13 @@ namespace PoE_Trade_Bot
 
         private void InviteCustomer()
         {
-            if (Win32.GetActiveWindowTitle() != "Path of Exile")
-            {
-                Win32.PoE_MainWindow();
-            }
+            ClientManager.Instance.BringToForeground();
 
             Logger.Console.Info("Invite in party...");
 
             string command = "/invite " + Customer.First().Nickname;
 
-            Win32.ChatCommand(command);
+            ClientManager.Instance.ChatCommand(command);
         }
 
         private bool OpenStash()
@@ -297,8 +288,6 @@ namespace PoE_Trade_Bot
 
                     Thread.Sleep(100);
 
-                    Win32.DoMouseClick();
-                    Thread.Sleep(100);
                     Win32.DoMouseClick();
                     Thread.Sleep(100);
 
@@ -389,9 +378,9 @@ namespace PoE_Trade_Bot
                 {
                     Logger.Console.Info("not found item");
 
-                    Win32.ChatCommand($"@{Customer.First().Nickname} I sold it, sry");
+                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} I sold it, sry");
 
-                    Win32.SendKeyInPoE("{ESC}");
+                    ClientManager.Instance.SendKey("{ESC}");
 
                     return false;
                 }
@@ -400,9 +389,9 @@ namespace PoE_Trade_Bot
                 {
                     Logger.Console.Info("Fake price");
 
-                    Win32.ChatCommand($"@{Customer.First().Nickname} It is not my price!");
+                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} It is not my price!");
 
-                    Win32.SendKeyInPoE("{ESC}");
+                    ClientManager.Instance.SendKey("{ESC}");
 
                     return false;
                 }
@@ -413,7 +402,7 @@ namespace PoE_Trade_Bot
 
                 Win32.MoveTo(750, 350);
 
-                Win32.SendKeyInPoE("{ESC}");
+                ClientManager.Instance.SendKey("{ESC}");
 
                 return true;
 
@@ -480,7 +469,7 @@ namespace PoE_Trade_Bot
                             Logger.Console.Debug("i write trade");
                             string trade_command = "/tradewith " + Customer.First().Nickname;
 
-                            Win32.ChatCommand(trade_command);
+                            ClientManager.Instance.ChatCommand(trade_command);
 
                             screen_shot = ScreenCapture.CaptureRectangle(455, 285, 475, 210);
 
@@ -563,7 +552,7 @@ namespace PoE_Trade_Bot
 
                         while (ss == null)
                         {
-                            Win32.SendKeyInPoE("^c");
+                            ClientManager.Instance.SendKey("^c");
                             ss = Win32.GetText();
 
                             if (time < DateTime.Now)
@@ -588,9 +577,9 @@ namespace PoE_Trade_Bot
                     screen_shot.Dispose();
                 }
             }
-            Win32.SendKeyInPoE("{ESC}");
+            ClientManager.Instance.SendKey("{ESC}");
 
-            Win32.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
+            ClientManager.Instance.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
 
             return false;
         }
@@ -627,7 +616,7 @@ namespace PoE_Trade_Bot
 
             if (Customer.First().Currency.Name == "exalted orb")
             {
-                Win32.ChatCommand($"@{Customer.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
+                ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
 
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
             }
@@ -723,14 +712,14 @@ namespace PoE_Trade_Bot
                 Thread.Sleep(500);
             }
 
-            Win32.SendKeyInPoE("{ESC}");
+            ClientManager.Instance.SendKey("{ESC}");
 
             return false;
         }
 
         private void KickFormParty()
         {
-            Win32.ChatCommand("/kick " + Customer.First().Nickname);
+            ClientManager.Instance.ChatCommand("/kick " + Customer.First().Nickname);
         }
 
         //for many items
@@ -857,7 +846,7 @@ namespace PoE_Trade_Bot
                     }
                 }
 
-                Win32.SendKeyInPoE("{ESC}");
+                ClientManager.Instance.SendKey("{ESC}");
 
                 Logger.Console.Debug("Scan is end!");
             }
@@ -941,23 +930,14 @@ namespace PoE_Trade_Bot
                         if (TotalAmount > customer.NumberProducts)
                         {
                             TotalAmount -= i.SizeInStack;
-
                             int necessary = customer.NumberProducts - TotalAmount;
-
                             i.SizeInStack -= necessary;
-
                             _Tab.AddItem(i);
-
                             TotalAmount += necessary;
-
                             Win32.ShiftClick();
-
                             Thread.Sleep(100);
-
-                            Win32.SendNumber_PoE(necessary);
-
-                            Win32.SendKeyInPoE("{ENTER}");
-
+                            ClientManager.Instance.SendNumber(necessary);
+                            ClientManager.Instance.SendKey("{ENTER}");
                             PutInInventory();
 
                         }
@@ -969,7 +949,7 @@ namespace PoE_Trade_Bot
 
                         if (TotalAmount == customer.NumberProducts)
                         {
-                            Win32.SendKeyInPoE("{ESC}");
+                            ClientManager.Instance.SendKey("{ESC}");
 
                             return true;
                         }
@@ -979,7 +959,7 @@ namespace PoE_Trade_Bot
                 {
                     Logger.Console.Info("Items not found!");
 
-                    Win32.ChatCommand($"@{customer.Nickname} maybe I sold it");
+                    ClientManager.Instance.ChatCommand($"@{customer.Nickname} maybe I sold it");
                 }
 
             }
@@ -1101,9 +1081,9 @@ namespace PoE_Trade_Bot
                     screen_shot.Dispose();
                 }
             }
-            Win32.SendKeyInPoE("{ESC}");
+            ClientManager.Instance.SendKey("{ESC}");
 
-            Win32.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
+            ClientManager.Instance.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
 
             return false;
         }
@@ -1359,7 +1339,7 @@ namespace PoE_Trade_Bot
 
             while (ss == null)
             {
-                Win32.SendKeyInPoE("^c");
+                ClientManager.Instance.SendKey("^c");
                 ss = Win32.GetText();
 
                 if (time < DateTime.Now)

@@ -44,7 +44,7 @@ namespace PoE_Trade_Bot.PoEClient
 
         private void ReadLogsInBack()
         {
-            Win32.FocusPoEWindow();
+            ClientManager.Instance.BringToForeground();
 
             int last_index = -1;
             bool not_first = false;
