@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PoE_Trade_Bot.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -81,7 +82,7 @@ namespace PoE_Trade_Bot.Models
             //}
 
 
-            Console.WriteLine("Curencies updated!");
+            Logger.Console.Info("Curencies updated!");
         }
     }
 
