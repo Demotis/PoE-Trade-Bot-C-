@@ -7,15 +7,17 @@ namespace PoE_Trade_Bot.Utilities
 {
     public sealed class PoECurrencyManager : IDisposable
     {
+
+        
         private static readonly PoECurrencyManager instance = new PoECurrencyManager();
         private bool disposedValue;
         public static PoECurrencyManager Instance => instance;
-
-        private Task ExchangeRatesTask;
-        private static Timer TheTimer = null;
-        private DateTime currentTime = DateTime.Now;
+        private System.Timers.Timer tTimer;
         
+
         public Currencies Currencies { get; private set; }
+
+
 
         static PoECurrencyManager()
         {
@@ -24,24 +26,19 @@ namespace PoE_Trade_Bot.Utilities
         private PoECurrencyManager()
         {
             Currencies = new Currencies();
-            ExchangeRatesTask = new Task(CheckExchangeRates);
-            ExchangeRatesTask.Start();
+            tTimer = new System.Timers.Timer();
+            tTimer.Interval = 30 * 60 * 1000;
+            tTimer.Elapsed += CheckExchangeRates;
+            tTimer.AutoReset = true;
+            tTimer.Enabled = true;
+            CheckExchangeRates(null, null); 
+            
         }
 
-        private void CheckExchangeRates()
+        private void CheckExchangeRates(Object source, System.Timers.ElapsedEventArgs e)
         {
-            DateTime timer = currentTime.AddMinutes(30);
+            Currencies.Update();
 
-            while (true)
-            {
-                if (timer <= DateTime.Now)
-                {
-                    Currencies.Update();
-                    timer = DateTime.Now + new TimeSpan(0, 30, 0);
-                }
-
-                Thread.Sleep(1000 * 60 * 5);
-            }
         }
 
 
