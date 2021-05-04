@@ -42,8 +42,6 @@ namespace PoE_Trade_Bot.Utilities
             }
         }
 
-
-
         private void Dispose(bool disposing)
         {
             if (!disposedValue)

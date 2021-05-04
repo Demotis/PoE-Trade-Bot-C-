@@ -21,10 +21,8 @@ namespace PoE_Trade_Bot.Services
             
             string guid = Guid.NewGuid().ToString();
             bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
-            //bmp.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".jpg", ImageFormat.Jpeg);
 
             g.Dispose();
-
             return bmp;
         }
         public static Bitmap CaptureScreen()
@@ -35,10 +33,8 @@ namespace PoE_Trade_Bot.Services
 
             string guid = Guid.NewGuid().ToString();
             bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
-            //bmp.Save(@"C:\Users\MrWaip\Desktop\tests\test" + DateTime.Now.ToShortDateString() + ".jpg", ImageFormat.Jpeg);
 
             g.Dispose();
-
             return bmp;
         }
     }

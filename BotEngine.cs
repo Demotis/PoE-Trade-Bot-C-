@@ -299,8 +299,6 @@ namespace PoE_Trade_Bot
 
                     Win32.DoMouseClick();
                     Thread.Sleep(100);
-                    Win32.DoMouseClick();
-                    Thread.Sleep(100);
 
                     Win32.MoveTo(screen_shot.Width / 2, screen_shot.Height / 2);
 
