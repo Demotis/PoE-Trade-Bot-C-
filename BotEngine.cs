@@ -24,8 +24,6 @@ namespace PoE_Trade_Bot
 
         private Tab _Tab;
 
-        //current instance customer
-
         public BotEngine()
         {
             Customer = new List<CustomerInfo>();
@@ -38,12 +36,6 @@ namespace PoE_Trade_Bot
             StartTrader_PoEbota();
             Console.ReadKey();
         }
-
-        private void ShutdownProcess()
-        {
-
-        }
-
 
         //Trade Functions
 
@@ -77,7 +69,7 @@ namespace PoE_Trade_Bot
                         throw new Exception("Stash is not found in the area.");
                     }
 
-                    ClearInventory("recycle_tab");
+                    ClientManager.Instance.ClearInventory();
                     ScanTab();
                     IsFirstTime = false;
                 }
@@ -245,7 +237,7 @@ namespace PoE_Trade_Bot
                     }
                     else
                     {
-                        ClearInventory();
+                        ClientManager.Instance.ClearInventory();
                     }
 
                     Logger.Console.Info("Trade comlete sccessfull");
@@ -277,13 +269,13 @@ namespace PoE_Trade_Bot
             {
                 screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_trade_tab.png");
+                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("notactive_trade_tab"));
 
                 if (found_pos.IsVisible)
                     break;
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_trade_tab.png");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("active_trade_tab"));
                     if (found_pos.IsVisible)
                     {
                         break;
@@ -387,7 +379,7 @@ namespace PoE_Trade_Bot
                     {
                         screen_shot = ScreenCapture.CaptureRectangle(1030, 260, 330, 500);
 
-                        found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/accespt.png");
+                        found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("accespt"));
 
                         if (found_pos.IsVisible)
                         {
@@ -417,7 +409,7 @@ namespace PoE_Trade_Bot
                             if (!Customer.First().IsInArea)
                                 return false;
 
-                            found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/trade_waiting.png");
+                            found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_waiting"));
                             if (found_pos.IsVisible)
                             {
                                 Win32.MoveTo(455 + found_pos.Left + found_pos.Width / 2, 285 + found_pos.Top + found_pos.Height / 2);
@@ -430,7 +422,7 @@ namespace PoE_Trade_Bot
                             {
                                 Logger.Console.Debug("Check trade window");
                                 screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
-                                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/trade_window_title.png");
+                                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_window_title"));
                                 if (found_pos.IsVisible)
                                 {
                                     Logger.Console.Debug("I am in trade!");
@@ -444,7 +436,7 @@ namespace PoE_Trade_Bot
                     {
                         Logger.Console.Debug("Check trade window");
                         screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
-                        found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/trade_window_title.png");
+                        found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_window_title"));
                         if (found_pos.IsVisible)
                         {
                             screen_shot.Dispose();
@@ -477,7 +469,7 @@ namespace PoE_Trade_Bot
 
                     screen_shot = ScreenCapture.CaptureRectangle(x_inventory - 30 + offset * j, y_inventory - 30 + offset * i, 60, 60);
 
-                    Position pos = OpenCV_Service.FindObject(screen_shot, "Assets/UI_Fragments/empty_cel.png", 0.4);
+                    Position pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.4);
 
                     if (!pos.IsVisible)
                     {
@@ -615,7 +607,7 @@ namespace PoE_Trade_Bot
 
                     screen_shot = ScreenCapture.CaptureRectangle(200, 575, 130, 40);
 
-                    Position pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/accept_tradewindow.png");
+                    Position pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("accept_tradewindow"));
 
                     if (pos.IsVisible)
                     {
@@ -675,7 +667,7 @@ namespace PoE_Trade_Bot
             {
                 var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".png");
+                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"notactive_{name_tab}"));
 
                 if (found_pos.IsVisible)
                 {
@@ -683,7 +675,7 @@ namespace PoE_Trade_Bot
                 }
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".png");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"active_{name_tab}"));
                     if (found_pos.IsVisible)
                     {
                         screen_shot.Dispose();
@@ -727,7 +719,7 @@ namespace PoE_Trade_Bot
 
                         var screen_shot = ScreenCapture.CaptureRectangle(Left_Stash64 - 30 + 38 * i, Top_Stash64 - 30 + 38 * j, 60, 60);
 
-                        Position pos = OpenCV_Service.FindObject(screen_shot, "Assets/UI_Fragments/empty_cel.png", 0.5);
+                        Position pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.5);
 
                         if (!pos.IsVisible)
                         {
@@ -807,13 +799,13 @@ namespace PoE_Trade_Bot
             {
                 var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".png");
+                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"notactive_{name_tab}"));
 
                 if (found_pos.IsVisible)
                     break;
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".png");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"active_{name_tab}"));
                     if (found_pos.IsVisible)
                     {
                         screen_shot.Dispose();
@@ -914,7 +906,7 @@ namespace PoE_Trade_Bot
         {
             var screen_shot = ScreenCapture.CaptureRectangle(900, 420, 460, 200);
 
-            var empty_poss = OpenCV_Service.FindObjects(screen_shot, "Assets/UI_Fragments/empty_cel.png", 0.5);
+            var empty_poss = OpenCV_Service.FindObjects(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.5);
 
             if (empty_poss.Any())
             {
@@ -970,7 +962,7 @@ namespace PoE_Trade_Bot
 
                     var screen_shot = ScreenCapture.CaptureRectangle(x_inventory - 30 + offset * j, y_inventory - 30 + offset * i, 60, 60);
 
-                    var pos = OpenCV_Service.FindObject(screen_shot, "Assets/UI_Fragments/empty_cel.png", 0.5);
+                    var pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.5);
 
                     if (!pos.IsVisible)
                     {
@@ -1027,94 +1019,6 @@ namespace PoE_Trade_Bot
             ClientManager.Instance.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
 
             return false;
-        }
-
-        private void ClearInventory(string recycle_tab = "recycle_tab")
-        {
-            Position found_pos = null;
-
-            Logger.Console.Debug($"Search {recycle_tab}...");
-
-            Thread.Sleep(500);
-
-            for (int count_try = 0; count_try < 16; count_try++)
-            {
-                var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
-
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + recycle_tab + ".png");
-
-                Thread.Sleep(1000);
-
-                if (found_pos.IsVisible)
-                {
-                    break;
-                }
-                else
-                {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + recycle_tab + ".png");
-                    if (found_pos.IsVisible)
-                    {
-                        screen_shot.Dispose();
-
-                        break;
-                    }
-                }
-                screen_shot.Dispose();
-
-                Thread.Sleep(500);
-            }
-
-
-
-            if (found_pos.IsVisible)
-            {
-                Win32.MoveTo(10 + found_pos.Left + found_pos.Width / 2, 90 + found_pos.Top + found_pos.Height / 2);
-
-                Thread.Sleep(200);
-
-                Win32.DoMouseClick();
-
-                Thread.Sleep(250);
-
-
-                int x_inventory = 925;
-                int y_inventory = 440;
-                int offset = 37;
-
-                for (int j = 0; j < 12; j++)
-                {
-                    for (int i = 0; i < 5; i++)
-                    {
-                        Win32.MoveTo(x_inventory + offset * j, y_inventory + 175);
-
-                        Thread.Sleep(100);
-
-                        var screen_shot = ScreenCapture.CaptureRectangle(x_inventory - 30 + offset * j, y_inventory - 30 + offset * i, 60, 60);
-
-                        Position pos = OpenCV_Service.FindObject(screen_shot, "Assets/UI_Fragments/empty_cel.png", 0.5);
-
-                        if (!pos.IsVisible)
-                        {
-                            Win32.MoveTo(x_inventory + offset * j, y_inventory + offset * i);
-
-                            Thread.Sleep(100);
-
-                            string item_info = CtrlC_PoE();
-
-                            if (item_info != "empty_string")
-                            {
-                                Win32.CtrlMouseClick();
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            else
-            {
-                throw new Exception($"{recycle_tab} not found!");
-            }
         }
 
         //util

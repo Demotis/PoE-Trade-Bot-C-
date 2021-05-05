@@ -94,7 +94,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums\ChatCommands.cs" />
+    <Compile Include="Enums\ChatCommand.cs" />
+    <Compile Include="Enums\Currency.cs" />
+    <Compile Include="Enums\Resolution.cs" />
     <Compile Include="PoEClient\ClientManager.cs" />
     <Compile Include="PoEClient\LogManager.cs" />
     <Compile Include="Utilities\ConfigManager.cs" />
@@ -115,8 +117,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Win32.cs" />
     <Compile Include="Utilities\Extensions.cs" />
+    <Compile Include="Utilities\InventoryPositions.cs" />
     <Compile Include="Utilities\PoECurrencyManager.cs" />
     <Compile Include="Utilities\Logger.cs" />
+    <Compile Include="Utilities\StaticUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -129,6 +133,48 @@
     <Content Include="Assets\Currencies\orbofalchemy.png" />
     <Content Include="Assets\Currencies\orbofalteration.png" />
     <Content Include="Assets\Currencies\orboffusing.png" />
+    <Content Include="Assets\UI_Fragments\800600\accept_tradewindow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\accespt.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\active_currency_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\active_recycle_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\active_trade_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\cancel_tradewindow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\empty_cel.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\notactive_currency_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\notactive_recycle_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\notactive_trade_tab.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\open_stash.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\stashtitle.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\trade_waiting.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\UI_Fragments\800600\trade_window_title.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\UI_Fragments\accept_tradewindow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

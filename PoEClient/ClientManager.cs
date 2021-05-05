@@ -1,5 +1,7 @@
-﻿using PoE_Trade_Bot.Models;
+﻿using PoE_Trade_Bot.Enums;
+using PoE_Trade_Bot.Models;
 using PoE_Trade_Bot.Services;
+using PoE_Trade_Bot.Utilities;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -17,6 +19,8 @@ namespace PoE_Trade_Bot.PoEClient
         public Process ActiveProcess { get; private set; }
         public Rectangle WindowRect { get; private set; }
 
+        public Resolution ResolutionEnum { get; private set; }
+
         static ClientManager()
         {
         }
@@ -29,6 +33,8 @@ namespace PoE_Trade_Bot.PoEClient
                 ActiveProcess = process;
             else
                 throw new Exception("Path of Exile is not running!");
+
+            ResolutionEnum = (Resolution)Convert.ToInt32(ConfigManager.Instance.ApplicationConfig["POEResolution"]);
 
             SetCurrentPosition();
         }
@@ -107,6 +113,8 @@ namespace PoE_Trade_Bot.PoEClient
 
         public bool OpenStash(int testCycle = 1)
         {
+            Logger.Console.Debug($"Open Stash Cycle {testCycle}...");
+
             if (testCycle > 20)
                 return false;
 
@@ -114,24 +122,68 @@ namespace PoE_Trade_Bot.PoEClient
 
             using (Bitmap stashTitleSearch = ScreenCapture.CaptureRectangle(WindowRect))
             {
-                Position foundPosition = OpenCV_Service.FindObject(stashTitleSearch, @"Assets/UI_Fragments/stashtitle.png");
+                if (OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("open_stash")).IsVisible)
+                    return true;
+
+                Position foundPosition = OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("stashtitle"));
                 if (foundPosition.IsVisible)
                 {
                     TranslatePosition(ref foundPosition);
-                    Win32.MoveTo(foundPosition.Left + foundPosition.Width / 2, foundPosition.Top + foundPosition.Height);
+                    Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
                     Win32.DoMouseClick();
-
-                    using (Bitmap stashOpenSearch = ScreenCapture.CaptureRectangle(WindowRect))
-                    {
-                        if (OpenCV_Service.FindObject(stashOpenSearch, @"Assets/UI_Fragments/open_stash.png").IsVisible)
-                            return true;
-                    }
-
                 }
             }
             return OpenStash(testCycle++);
         }
 
+        public bool ActivateTab(string tabName, int testCycle = 1)
+        {
+            Logger.Console.Debug($"Activate Tab {tabName}, Cycle {testCycle}");
+
+            if (testCycle > 20)
+                return false;
+
+            if (!OpenStash())
+                throw new Exception("Unable to open Stash");
+
+            BringToForeground();
+
+            using (Bitmap tabSearch = ScreenCapture.CaptureRectangle(WindowRect))
+            {
+                Position foundPosition;
+                foundPosition = OpenCV_Service.FindObject(tabSearch, StaticUtils.GetUIFragmentPath($"active_{tabName}"));
+                if (foundPosition.IsVisible)
+                    return true; // Found the tab and it was active
+
+                foundPosition = OpenCV_Service.FindObject(tabSearch, StaticUtils.GetUIFragmentPath($"notactive_{tabName}"));
+                if (foundPosition.IsVisible) // Found the tab and now I need to click it
+                {
+                    TranslatePosition(ref foundPosition);
+                    Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
+                    Win32.DoMouseClick();
+                    return ActivateTab(tabName, testCycle++); // We need to make sure it is now active;
+                }
+
+                // We did not find a tab that matches
+                throw new Exception($"Tab {tabName} not found.");
+            }
+        }
+
+        public void ClearInventory(string recycle_tab = "recycle_tab")
+        {
+            // Activate Recycle Tab
+            ActivateTab(recycle_tab);
+
+            // Now move everything from Inventory to Stash
+            // We do not care what the item is at this point just CTRL+Click every block
+            foreach (Position invData in InventoryPositions.GetInvenoryPositions(ResolutionEnum))
+            {
+                Position tempPosition = new Position { Left = invData.Left, Top = invData.Top, Height = invData.Height, Width = invData.Width };
+                TranslatePosition(ref tempPosition);
+                Win32.MoveTo(tempPosition.ClickTargetX, tempPosition.ClickTargetY);
+                Win32.CtrlMouseClick();
+            }
+        }
 
         private void Dispose(bool disposing)
         {

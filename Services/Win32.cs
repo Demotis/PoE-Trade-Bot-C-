@@ -41,18 +41,16 @@ namespace PoE_Trade_Bot.Services
         public static void DoMouseClick()
         {
             mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
+            Thread.Sleep(50);
             mouse_event(MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
-            Thread.Sleep(500);
+            Thread.Sleep(100);
         }
 
         public static void ShiftClick()
         {
             keybd_event(VK_SHIFT, 0x45, KEYEVENTF_EXTENDEDKEY, 0);
-            Thread.Sleep(100);
             DoMouseClick();
-            Thread.Sleep(500);
             keybd_event(VK_SHIFT, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
-            Thread.Sleep(100);
         }
 
         public static void MoveTo(int x, int y)
@@ -60,7 +58,7 @@ namespace PoE_Trade_Bot.Services
             X = Convert.ToUInt32(x);
             Y = Convert.ToUInt32(y);
             SetCursorPos(x, y);
-            Thread.Sleep(500);
+            Thread.Sleep(50);
         }
 
         [DllImport("user32.dll")]
@@ -112,9 +110,7 @@ namespace PoE_Trade_Bot.Services
         public static void CtrlMouseClick()
         {
             DownCtrl();
-            Thread.Sleep(500);
             DoMouseClick();
-            Thread.Sleep(500);
             UpCtrl();
         }
 

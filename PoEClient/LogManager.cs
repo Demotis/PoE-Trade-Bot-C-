@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using PoE_Trade_Bot.Models;
-using PoE_Trade_Bot.Services;
 using PoE_Trade_Bot.Utilities;
 using System;
 using System.IO;
@@ -22,7 +21,7 @@ namespace PoE_Trade_Bot.PoEClient
         private string path;
         private string logsDir;
         private string logFile;
-       
+
 
         static LogManager()
         {
@@ -38,6 +37,7 @@ namespace PoE_Trade_Bot.PoEClient
                 logFile = logsDir + @"\Client.txt";
             }
 
+            // ToDo: Convert to a Timer
             ReadLogs = new Task(ReadLogsInBack);
             ReadLogs.Start();
         }

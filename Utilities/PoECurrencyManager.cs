@@ -1,19 +1,17 @@
 ﻿using PoE_Trade_Bot.Models;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.Utilities
 {
     public sealed class PoECurrencyManager : IDisposable
     {
 
-        
+
         private static readonly PoECurrencyManager instance = new PoECurrencyManager();
         private bool disposedValue;
         public static PoECurrencyManager Instance => instance;
         private System.Timers.Timer tTimer;
-        
+
 
         public Currencies Currencies { get; private set; }
 
@@ -31,8 +29,8 @@ namespace PoE_Trade_Bot.Utilities
             tTimer.Elapsed += CheckExchangeRates;
             tTimer.AutoReset = true;
             tTimer.Enabled = true;
-            CheckExchangeRates(null, null); 
-            
+            CheckExchangeRates(null, null);
+
         }
 
         private void CheckExchangeRates(Object source, System.Timers.ElapsedEventArgs e)
@@ -47,6 +45,7 @@ namespace PoE_Trade_Bot.Utilities
             {
                 if (disposing)
                 {
+                    // ToDo: Add code here to stop and dispose the timer
                 }
                 disposedValue = true;
             }

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.Models
 {
-    class Position
+    public class Position
     {
         public int Left { get; set; } = -1;
 
@@ -24,6 +20,21 @@ namespace PoE_Trade_Bot.Models
                     return true;
                 else
                     return false;
+            }
+        }
+
+        public int ClickTargetX
+        {
+            get
+            {
+                return (int)Math.Floor(Left + (double)(Width / 2));
+            }
+        }
+        public int ClickTargetY
+        {
+            get
+            {
+                return (int)Math.Floor(Top + (double)(Height / 2));
             }
         }
     }
