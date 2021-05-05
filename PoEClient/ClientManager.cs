@@ -5,6 +5,7 @@ using PoE_Trade_Bot.Utilities;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace PoE_Trade_Bot.PoEClient
@@ -131,6 +132,7 @@ namespace PoE_Trade_Bot.PoEClient
                     TranslatePosition(ref foundPosition);
                     Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
                     Win32.DoMouseClick();
+                    Thread.Sleep(2000);
                 }
             }
             return OpenStash(testCycle++);

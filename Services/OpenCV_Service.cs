@@ -14,7 +14,7 @@ namespace PoE_Trade_Bot.Services
 
         }
 
-        public static Position FindObject(Bitmap source_img, string path_template, double threshold = 0.85)
+        public static Position FindObject(Bitmap source_img, string path_template, double threshold = 0.95)
         {
             Position res = new Position();
 
@@ -44,7 +44,7 @@ namespace PoE_Trade_Bot.Services
             return res;
         }
 
-        public static List<Position> FindObjects(Bitmap source_img, string path_template, double threshold = 0.85)
+        public static List<Position> FindObjects(Bitmap source_img, string path_template, double threshold = 0.95)
         {
             List<Position> res_pos = new List<Position>();
 
@@ -96,7 +96,7 @@ namespace PoE_Trade_Bot.Services
 
 
 
-        internal static List<Position> FindCurrencies(Bitmap source_img, string path_template, double trashholder)
+        internal static List<Position> FindCurrencies(Bitmap source_img, string path_template, double threshold = 0.95)
         {
             List<Position> res_pos = new List<Position>();
 
@@ -117,7 +117,7 @@ namespace PoE_Trade_Bot.Services
 
                     // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
 
-                    if (maxValues[0] > trashholder)
+                    if (maxValues[0] > threshold)
                     {
                         // This is a match. Do something with it, for example draw a rectangle around it.
                         Rectangle match = new Rectangle(maxLocations[0], template.Size);
