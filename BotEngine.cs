@@ -277,13 +277,13 @@ namespace PoE_Trade_Bot
             {
                 screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_trade_tab.jpg");
+                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_trade_tab.png");
 
                 if (found_pos.IsVisible)
                     break;
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_trade_tab.jpg");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_trade_tab.png");
                     if (found_pos.IsVisible)
                     {
                         break;
@@ -675,7 +675,7 @@ namespace PoE_Trade_Bot
             {
                 var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".jpg");
+                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".png");
 
                 if (found_pos.IsVisible)
                 {
@@ -683,7 +683,7 @@ namespace PoE_Trade_Bot
                 }
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".jpg");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".png");
                     if (found_pos.IsVisible)
                     {
                         screen_shot.Dispose();
@@ -807,13 +807,13 @@ namespace PoE_Trade_Bot
             {
                 var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".jpg");
+                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/notactive_" + name_tab + ".png");
 
                 if (found_pos.IsVisible)
                     break;
                 else
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".jpg");
+                    found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/active_" + name_tab + ".png");
                     if (found_pos.IsVisible)
                     {
                         screen_shot.Dispose();
