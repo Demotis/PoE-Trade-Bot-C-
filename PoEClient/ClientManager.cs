@@ -123,10 +123,10 @@ namespace PoE_Trade_Bot.PoEClient
 
             using (Bitmap stashTitleSearch = ScreenCapture.CaptureRectangle(WindowRect))
             {
-                if (OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("open_stash")).IsVisible)
+                if (OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("open_stash"), 0.90).IsVisible)
                     return true;
 
-                Position foundPosition = OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("stashtitle"));
+                Position foundPosition = OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
                 if (foundPosition.IsVisible)
                 {
                     TranslatePosition(ref foundPosition);
@@ -135,7 +135,9 @@ namespace PoE_Trade_Bot.PoEClient
                     Thread.Sleep(2000);
                 }
             }
-            return OpenStash(testCycle++);
+            // Give it a little time incase it's loading the screen
+            Thread.Sleep(2000);
+            return OpenStash(++testCycle);
         }
 
         public bool ActivateTab(string tabName, int testCycle = 1)
@@ -163,7 +165,7 @@ namespace PoE_Trade_Bot.PoEClient
                     TranslatePosition(ref foundPosition);
                     Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
                     Win32.DoMouseClick();
-                    return ActivateTab(tabName, testCycle++); // We need to make sure it is now active;
+                    return ActivateTab(tabName, ++testCycle); // We need to make sure it is now active;
                 }
 
                 // We did not find a tab that matches
