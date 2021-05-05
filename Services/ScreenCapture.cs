@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
@@ -11,6 +10,10 @@ namespace PoE_Trade_Bot.Services
     /// </summary>
     public class ScreenCapture
     {
+        public static Bitmap CaptureRectangle(Rectangle rect)
+        {
+            return CaptureRectangle(rect.X, rect.Y, rect.Width, rect.Height);
+        }
 
         public static Bitmap CaptureRectangle(int x, int y, int rec_width, int rec_height)
         {
@@ -18,13 +21,14 @@ namespace PoE_Trade_Bot.Services
             Bitmap bmp = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppRgb);
             Graphics g = Graphics.FromImage(bmp);
             g.CopyFromScreen(rect.Left, rect.Top, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
-            
+
             string guid = Guid.NewGuid().ToString();
             bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
 
             g.Dispose();
             return bmp;
         }
+
         public static Bitmap CaptureScreen()
         {
             Bitmap bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height, PixelFormat.Format32bppRgb);

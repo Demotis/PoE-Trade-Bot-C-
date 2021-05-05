@@ -49,6 +49,9 @@ namespace PoE_Trade_Bot
 
         private void StartTrader_PoEbota()
         {
+            // Travel to the hideout
+            ClientManager.Instance.ChatCommand(Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
+
             bool IsFirstTime = true;
 
             DateTime timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
@@ -68,20 +71,15 @@ namespace PoE_Trade_Bot
 
                 if (IsFirstTime)
                 {
-                    if (Win32.GetActiveWindowTitle() != "Path of Exile")
+                    if (!ClientManager.Instance.OpenStash())
                     {
-                        ClientManager.Instance.BringToForeground();
-
-                        if (!OpenStash())
-                        {
-                            IsFirstTime = false;
-                            throw new Exception("Stash is not found in the area.");
-                        }
-
-                        ClearInventory("recycle_tab");
-                        ScanTab();
                         IsFirstTime = false;
+                        throw new Exception("Stash is not found in the area.");
                     }
+
+                    ClearInventory("recycle_tab");
+                    ScanTab();
+                    IsFirstTime = false;
                 }
 
                 if (Customer.Any() && !IsFirstTime)
@@ -96,7 +94,7 @@ namespace PoE_Trade_Bot
                     {
                         InviteCustomer();
 
-                        if (!OpenStash())
+                        if (!ClientManager.Instance.OpenStash())
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
@@ -166,7 +164,7 @@ namespace PoE_Trade_Bot
                     {
                         InviteCustomer();
 
-                        if (!OpenStash())
+                        if (!ClientManager.Instance.OpenStash())
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
@@ -241,7 +239,7 @@ namespace PoE_Trade_Bot
 
                     Customer.Remove(Customer.First());
 
-                    if (!OpenStash())
+                    if (!ClientManager.Instance.OpenStash())
                     {
                         Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
                     }
@@ -266,63 +264,6 @@ namespace PoE_Trade_Bot
             string command = "/invite " + Customer.First().Nickname;
 
             ClientManager.Instance.ChatCommand(command);
-        }
-
-        private bool OpenStash()
-        {
-            Bitmap screen_shot = null;
-            Position found_pos = null;
-
-            //find stash poition
-
-            Logger.Console.Debug("Search stash in location...");
-
-            for (int search_pos = 0; search_pos < 20; search_pos++)
-            {
-                screen_shot = ScreenCapture.CaptureScreen();
-                found_pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/stashtitle.png");
-
-                if (found_pos.IsVisible)
-                {
-                    Win32.MoveTo(found_pos.Left + found_pos.Width / 2, found_pos.Top + found_pos.Height);
-
-                    Thread.Sleep(100);
-
-                    Win32.DoMouseClick();
-                    Thread.Sleep(100);
-
-                    Win32.MoveTo(screen_shot.Width / 2, screen_shot.Height / 2);
-
-                    var timer = DateTime.Now + new TimeSpan(0, 0, 5);
-
-                    while (true)
-                    {
-                        screen_shot = ScreenCapture.CaptureRectangle(140, 32, 195, 45);
-
-                        var pos = OpenCV_Service.FindObject(screen_shot, @"Assets/UI_Fragments/open_stash.png");
-
-                        if (pos.IsVisible)
-                        {
-                            screen_shot.Dispose();
-
-                            return true;
-                        }
-
-                        if (timer < DateTime.Now)
-                            break;
-
-                        Thread.Sleep(500);
-                    }
-                }
-
-                screen_shot.Dispose();
-
-                Thread.Sleep(500);
-            }
-
-            Logger.Console.Warn("Stash is not found");
-
-            return false;
         }
 
         private bool TakeProduct()
