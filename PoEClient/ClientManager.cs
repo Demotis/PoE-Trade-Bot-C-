@@ -6,6 +6,7 @@ using PoE_Trade_Bot.Utilities;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,6 +22,7 @@ namespace PoE_Trade_Bot.PoEClient
         public bool IsAFK { get; set; }
         public Process ActiveProcess { get; private set; }
         public Rectangle WindowRect { get; private set; }
+        private System.Timers.Timer _afkTimer { get; set; }
 
         public Resolution ResolutionEnum { get; private set; }
 
@@ -40,6 +42,23 @@ namespace PoE_Trade_Bot.PoEClient
             ResolutionEnum = (Resolution)Convert.ToInt32(ConfigManager.Instance.ApplicationConfig["POEResolution"]);
 
             SetCurrentPosition();
+
+            StartAFKService();
+        }
+
+        private void StartAFKService()
+        {
+            _afkTimer = new System.Timers.Timer();
+            _afkTimer.Interval = 60000;
+            _afkTimer.Elapsed += AfkTimerTick;
+            _afkTimer.AutoReset = true;
+            _afkTimer.Enabled = true;
+        }
+
+        private void AfkTimerTick(object source, System.Timers.ElapsedEventArgs e)
+        {
+            if (!BotEngine.Customer.Any())
+                ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
         }
 
         public void ValidateProcess()
@@ -252,6 +271,13 @@ namespace PoE_Trade_Bot.PoEClient
             {
                 if (disposing)
                 {
+                    if (_afkTimer != null)
+                    {
+                        if (_afkTimer.Enabled)
+                            _afkTimer.Stop();
+                        _afkTimer.Elapsed -= AfkTimerTick;
+                        _afkTimer = null;
+                    }
                 }
                 disposedValue = true;
             }

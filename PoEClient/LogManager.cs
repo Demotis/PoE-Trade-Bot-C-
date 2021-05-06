@@ -5,8 +5,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.PoEClient
 {
@@ -15,12 +13,13 @@ namespace PoE_Trade_Bot.PoEClient
         private static readonly LogManager instance = new LogManager();
         private bool disposedValue;
         public static LogManager Instance => instance;
+        private System.Timers.Timer _timer;
+        private long _lastIndex { get; set; }
+        private bool _processingLog { get; set; }
 
-        private Task ReadLogs;
-
-        private string path;
-        private string logsDir;
-        private string logFile;
+        private string _path;
+        private string _logsDir;
+        private string _logFile;
 
 
         static LogManager()
@@ -33,61 +32,56 @@ namespace PoE_Trade_Bot.PoEClient
             if (path != null)
             {
                 path = path.ToString();
-                logsDir = path + @"logs\";
-                logFile = logsDir + @"\Client.txt";
+                _logsDir = path + @"logs\";
+                _logFile = _logsDir + @"\Client.txt";
             }
-
-            // ToDo: Convert to a Timer
-            ReadLogs = new Task(ReadLogsInBack);
-            ReadLogs.Start();
         }
 
-        private void ReadLogsInBack()
+        public void StartService()
         {
-            ClientManager.Instance.BringToForeground();
+            _lastIndex = GetLineCount();
+            _timer = new System.Timers.Timer();
+            _timer.Interval = 1000;
+            _timer.Elapsed += ReadLogs;
+            _timer.AutoReset = true;
+            _timer.Enabled = true;
+        }
 
-            int last_index = -1;
-            bool not_first = false;
+        private long GetLineCount()
+        {
+            using (var fs = new FileStream(_logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                return fs.CountLines();
+        }
 
-            while (true)
+        private void ReadLogs(object source, System.Timers.ElapsedEventArgs e)
+        {
+            if (_processingLog)
+                return;
+            _processingLog = true;
+            long currentLine = 0;
+
+            using (var fs = new FileStream(_logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs))
             {
-                var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using (var sr = new StreamReader(fs))
+                string line;
+                while ((line = sr.ReadLine()) != null)
                 {
-                    int li = 0;
-                    string ll = string.Empty;
-                    while (!sr.EndOfStream)
-                    {
-                        li++;
-                        ll = sr.ReadLine();
-
-                        if (not_first && li > last_index)
-                        {
-                            if (ll.Contains("bad [INFO Client"))
-                            {
-                                Logger.Console.Debug(ll);
-                                ProcessLogLine(ll);
-                            }
-                        }
-                    }
-
-                    sr.Dispose();
-                    fs.Dispose();
-
-                    if (li > last_index)
-                    {
-                        last_index = li;
-
-                        if (!not_first)
-                            not_first = true;
-                    }
+                    currentLine++;
+                    if (_lastIndex >= currentLine)
+                        continue;
+                    if (line.Contains("bad [INFO Client"))
+                        ProcessLogLine(line);
+                    _lastIndex++;
                 }
-                Thread.Sleep(100);
+
             }
+            _processingLog = false;
         }
 
         private void ProcessLogLine(string logLine)
         {
+            Logger.Console.Debug(logLine);
+
             //GetFullInfoCustomer
             try
             {
@@ -159,7 +153,6 @@ namespace PoE_Trade_Bot.PoEClient
                     if (cus_inf.IsReady)
                     {
                         BotEngine.Customer.Add(cus_inf);
-
                         Logger.Console.Info(cus_inf.ToString());
                     }
                 }
@@ -200,7 +193,7 @@ namespace PoE_Trade_Bot.PoEClient
             {
                 if (logLine.Contains(BotEngine.Customer.First().Nickname) && logLine.Contains("has joined the area"))
                 {
-                    Logger.Console.Info("He come for product");
+                    Logger.Console.Info($"Customer has arrived {BotEngine.Customer.First().Nickname}");
                     BotEngine.Customer.First().IsInArea = true;
                 }
 
@@ -219,18 +212,11 @@ namespace PoE_Trade_Bot.PoEClient
                     BotEngine.Customer.First().TradeStatus = CustomerInfo.TradeStatuses.CANCELED;
                 }
             }
-            else
-            {
-                if (logLine.Contains("AFK mode is now ON. Autoreply"))
-                {
-                    ClientManager.Instance.IsAFK = true;
-                }
-                if (logLine.Contains("AFK mode is now OFF"))
-                {
-                    ClientManager.Instance.IsAFK = false;
-                }
-            }
 
+            if (logLine.Contains("AFK mode is now ON. Autoreply"))
+                ClientManager.Instance.IsAFK = true;
+            if (logLine.Contains("AFK mode is now OFF"))
+                ClientManager.Instance.IsAFK = false;
         }
 
         private double GetNumber(int begin, string target)
@@ -264,6 +250,13 @@ namespace PoE_Trade_Bot.PoEClient
             {
                 if (disposing)
                 {
+                    if (_timer != null)
+                    {
+                        if (_timer.Enabled)
+                            _timer.Stop();
+                        _timer.Elapsed -= ReadLogs;
+                        _timer = null;
+                    }
                 }
                 disposedValue = true;
             }

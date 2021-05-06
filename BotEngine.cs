@@ -28,199 +28,180 @@ namespace PoE_Trade_Bot
         {
             Customer = new List<CustomerInfo>();
             CompletedTrades = new List<CustomerInfo>();
+            TradeTabData = new Tab();
 
-            // Get Currencies
-            PoECurrencyManager.Instance.Currencies.Update();
+            // Start Currencies Service
+            PoECurrencyManager.Instance.StartService();
+            LogManager.Instance.StartService();
         }
 
         public void StartBot()
         {
-            TradeTabData = new Tab();
+            ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
+            ClientManager.Instance.ChatCommand(Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
+            PrepareTradeData();
             StartTrader_PoEbota();
             Console.ReadKey();
         }
 
-        //Trade Functions
+        private void PrepareTradeData()
+        {
+            if (!ClientManager.Instance.OpenStash())
+                throw new Exception("Stash is not found in the area.");
+            ClientManager.Instance.ClearInventory();
+            TradeTabData = ClientManager.Instance.GetTabData("trade_tab");
+        }
 
         private void StartTrader_PoEbota()
         {
-            // Travel to the hideout
-            ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
-            ClientManager.Instance.ChatCommand(Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
-            bool IsFirstTime = true;
-
-            DateTime timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
-
             while (true)
             {
-                if ((ClientManager.Instance.IsAFK && !Customer.Any()) || (!Customer.Any() && timer < DateTime.Now))
+                if (!Customer.Any())
                 {
-                    ClientManager.Instance.BringToForeground();
-                    ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
-                    timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
-                    ClientManager.Instance.IsAFK = false;
+                    Thread.Sleep(500);
+                    continue;
                 }
 
-                if (IsFirstTime)
+                ClientManager.Instance.BringToForeground();
+                Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
+
+                #region Many items
+                if (Customer.First().OrderType == CustomerInfo.OrderTypes.MANY)
                 {
+                    InviteCustomer();
                     if (!ClientManager.Instance.OpenStash())
                     {
-                        IsFirstTime = false;
-                        throw new Exception("Stash is not found in the area.");
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
                     }
+
+                    if (!TakeItems())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //check is area contain customer
+                    if (!CheckArea())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //start trade
+                    if (!TradeQuery())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    if (!PutItems())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    if (!CheckCurrency())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+                }
+                #endregion
+
+                #region Single item
+                if (Customer.First().OrderType == CustomerInfo.OrderTypes.SINGLE)
+                {
+                    InviteCustomer();
+
+                    if (!ClientManager.Instance.OpenStash())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    if (!TakeProduct())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //check is area contain customer
+                    if (!CheckArea())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //start trade
+                    if (!TradeQuery())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //get product
+                    if (!GetProduct())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+
+                    //search and check currency
+                    if (!CheckCurrency())
+                    {
+                        KickFormParty();
+                        Customer.Remove(Customer.First());
+                        Logger.Console.Info("\nTrade end!");
+                        continue;
+                    }
+                }
+                #endregion
+
+                ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} ty gl");
+                KickFormParty();
+                CompletedTrades.Add(Customer.First());
+                Customer.Remove(Customer.First());
+                if (!ClientManager.Instance.OpenStash())
+                {
+                    Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
+                }
+                else
+                {
                     ClientManager.Instance.ClearInventory();
-                    TradeTabData = ClientManager.Instance.GetTabData("trade_tab");
-                    IsFirstTime = false;
                 }
 
-                if (Customer.Any() && !IsFirstTime)
-                {
-                    ClientManager.Instance.BringToForeground();
-                    Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
-
-                    #region Many items
-                    if (Customer.First().OrderType == CustomerInfo.OrderTypes.MANY)
-                    {
-                        InviteCustomer();
-                        if (!ClientManager.Instance.OpenStash())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        if (!TakeItems())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //check is area contain customer
-                        if (!CheckArea())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //start trade
-                        if (!TradeQuery())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        if (!PutItems())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        if (!CheckCurrency())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-                    }
-                    #endregion
-
-                    #region Single item
-                    if (Customer.First().OrderType == CustomerInfo.OrderTypes.SINGLE)
-                    {
-                        InviteCustomer();
-
-                        if (!ClientManager.Instance.OpenStash())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        if (!TakeProduct())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //check is area contain customer
-                        if (!CheckArea())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //start trade
-                        if (!TradeQuery())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //get product
-                        if (!GetProduct())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-
-                        //search and check currency
-                        if (!CheckCurrency())
-                        {
-                            KickFormParty();
-                            Customer.Remove(Customer.First());
-                            Logger.Console.Info("\nTrade end!");
-                            continue;
-                        }
-                    }
-                    #endregion
-
-                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} ty gl");
-                    KickFormParty();
-                    CompletedTrades.Add(Customer.First());
-                    Customer.Remove(Customer.First());
-                    if (!ClientManager.Instance.OpenStash())
-                    {
-                        Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
-                    }
-                    else
-                    {
-                        ClientManager.Instance.ClearInventory();
-                    }
-
-                    Logger.Console.Info("Trade comlete sccessfull");
-                }
-
-                Thread.Sleep(100);
+                Logger.Console.Info("Trade comlete sccessfull");
             }
         }
 
         private void InviteCustomer()
         {
             ClientManager.Instance.BringToForeground();
-
             Logger.Console.Info("Invite in party...");
-
             string command = "/invite " + Customer.First().Nickname;
-
             ClientManager.Instance.ChatCommand(command);
         }
 

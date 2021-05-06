@@ -22,8 +22,11 @@ namespace PoE_Trade_Bot.Services
             Graphics g = Graphics.FromImage(bmp);
             g.CopyFromScreen(rect.Left, rect.Top, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
 
-            string guid = Guid.NewGuid().ToString();
-            bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+            if (Convert.ToBoolean(ConfigManager.Instance.ApplicationConfig["SaveTestImages"]))
+            {
+                string guid = Guid.NewGuid().ToString();
+                bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+            }
 
             g.Dispose();
             return bmp;
@@ -35,8 +38,11 @@ namespace PoE_Trade_Bot.Services
             Graphics g = Graphics.FromImage(bmp);
             g.CopyFromScreen(0, 0, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
 
-            string guid = Guid.NewGuid().ToString();
-            bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+            if (Convert.ToBoolean(ConfigManager.Instance.ApplicationConfig["SaveTestImages"]))
+            {
+                string guid = Guid.NewGuid().ToString();
+                bmp.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+            }
 
             g.Dispose();
             return bmp;

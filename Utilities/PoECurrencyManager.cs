@@ -24,6 +24,11 @@ namespace PoE_Trade_Bot.Utilities
         private PoECurrencyManager()
         {
             Currencies = new Currencies();
+
+        }
+
+        public void StartService()
+        {
             tTimer = new System.Timers.Timer();
             tTimer.Interval = 30 * 60 * 1000;
             tTimer.Elapsed += CheckExchangeRates;
@@ -32,7 +37,7 @@ namespace PoE_Trade_Bot.Utilities
             CheckExchangeRates(null, null);
         }
 
-        private void CheckExchangeRates(Object source, System.Timers.ElapsedEventArgs e)
+        private void CheckExchangeRates(object source, System.Timers.ElapsedEventArgs e)
         {
             Currencies.Update();
         }
