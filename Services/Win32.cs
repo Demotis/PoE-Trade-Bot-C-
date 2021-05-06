@@ -25,6 +25,11 @@ namespace PoE_Trade_Bot.Services
         [DllImport("user32.dll")]
         public static extern int GetWindowRect(IntPtr hwnd, out Rectangle rect);
 
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool GetWindowInfo(IntPtr hwnd, ref WINDOWINFO pwi);
+
+
         [DllImport("User32.Dll")]
         public static extern long SetCursorPos(int x, int y);
 
@@ -180,5 +185,36 @@ namespace PoE_Trade_Bot.Services
             }
             return null;
         }
+    }
+
+    public struct RECT
+    {
+        public int Left;       // Specifies the x-coordinate of the upper-left corner of the rectangle.
+        public int Top;        // Specifies the y-coordinate of the upper-left corner of the rectangle.
+        public int Right;      // Specifies the x-coordinate of the lower-right corner of the rectangle.
+        public int Bottom;     // Specifies the y-coordinate of the lower-right corner of the rectangle.
+
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WINDOWINFO
+    {
+        public uint cbSize;
+        public RECT rcWindow;
+        public RECT rcClient;
+        public uint dwStyle;
+        public uint dwExStyle;
+        public uint dwWindowStatus;
+        public uint cxWindowBorders;
+        public uint cyWindowBorders;
+        public ushort atomWindowType;
+        public ushort wCreatorVersion;
+
+        public WINDOWINFO(Boolean? filler)
+         : this()   // Allows automatic initialization of "cbSize" with "new WINDOWINFO(null/true/false)".
+        {
+            cbSize = (UInt32)(Marshal.SizeOf(typeof(WINDOWINFO)));
+        }
+
     }
 }

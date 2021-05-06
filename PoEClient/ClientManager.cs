@@ -1,10 +1,12 @@
 ﻿using PoE_Trade_Bot.Enums;
 using PoE_Trade_Bot.Models;
+using PoE_Trade_Bot.Models.Test;
 using PoE_Trade_Bot.Services;
 using PoE_Trade_Bot.Utilities;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -60,8 +62,18 @@ namespace PoE_Trade_Bot.PoEClient
 
         public void SetCurrentPosition()
         {
-            Rectangle rect;
-            Win32.GetWindowRect(ActiveProcess.MainWindowHandle, out rect);
+            WINDOWINFO info = new WINDOWINFO();
+            info.cbSize = (uint)Marshal.SizeOf(info);
+            Win32.GetWindowInfo(ActiveProcess.MainWindowHandle, ref info);
+
+
+            Rectangle rect = new Rectangle();
+            rect.X = info.rcClient.Left;
+            rect.Y = info.rcClient.Top;
+            rect.Height = info.rcClient.Bottom - info.rcClient.Top;
+            rect.Width = info.rcClient.Right - info.rcClient.Left;
+
+            // Win32.GetWindowRect(ActiveProcess.MainWindowHandle, out rect);
             WindowRect = rect;
         }
 
@@ -116,34 +128,48 @@ namespace PoE_Trade_Bot.PoEClient
         {
             Logger.Console.Debug($"Open Stash Cycle {testCycle}...");
 
+            // Have tried this 20 times, return failure
             if (testCycle > 20)
                 return false;
 
             BringToForeground();
 
-            using (Bitmap stashTitleSearch = ScreenCapture.CaptureRectangle(WindowRect))
-            {
-                if (OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("open_stash"), 0.90).IsVisible)
-                    return true;
+            Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("open_stash"), 0.90);
+            if (absolutePosition != null)
+                return true;
+            absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
+            if (absolutePosition != null)
+                ClickPosition(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
 
-                Position foundPosition = OpenCV_Service.FindObject(stashTitleSearch, StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
-                if (foundPosition.IsVisible)
-                {
-                    TranslatePosition(ref foundPosition);
-                    Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
-                    Win32.DoMouseClick();
-                    Thread.Sleep(2000);
-                }
-            }
             // Give it a little time incase it's loading the screen
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
             return OpenStash(++testCycle);
+        }
+
+        public void ClickPosition(int clickTargetX, int clickTargetY)
+        {
+            Win32.MoveTo(clickTargetX, clickTargetY);
+            Win32.DoMouseClick();
+            Thread.Sleep(100);
+        }
+
+        public Position GetAbsoluteAssetPosition(string assetPath, double threshold = 0.95)
+        {
+            Position foundPosition;
+            using (Bitmap search = ScreenCapture.CaptureRectangle(WindowRect))
+                foundPosition = OpenCV_Service.FindObject(search, assetPath, threshold);
+
+            if (!foundPosition.IsVisible)
+                return null;
+            TranslatePosition(ref foundPosition);
+            return foundPosition;
         }
 
         public bool ActivateTab(string tabName, int testCycle = 1)
         {
             Logger.Console.Debug($"Activate Tab {tabName}, Cycle {testCycle}");
 
+            // Have tried this 20 times, return failure
             if (testCycle > 20)
                 return false;
 
@@ -151,30 +177,21 @@ namespace PoE_Trade_Bot.PoEClient
                 throw new Exception("Unable to open Stash");
 
             BringToForeground();
-
-            using (Bitmap tabSearch = ScreenCapture.CaptureRectangle(WindowRect))
+            Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"active_{tabName}"));
+            if (absolutePosition == null) // Active Tab not found, let's look for inactive tab
+                absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"notactive_{tabName}"));
+            if (absolutePosition == null) // Nothing was found, Let's cycle incase we are still loading
             {
-                Position foundPosition;
-                foundPosition = OpenCV_Service.FindObject(tabSearch, StaticUtils.GetUIFragmentPath($"active_{tabName}"));
-                if (foundPosition.IsVisible)
-                    return true; // Found the tab and it was active
-
-                foundPosition = OpenCV_Service.FindObject(tabSearch, StaticUtils.GetUIFragmentPath($"notactive_{tabName}"));
-                if (foundPosition.IsVisible) // Found the tab and now I need to click it
-                {
-                    TranslatePosition(ref foundPosition);
-                    Win32.MoveTo(foundPosition.ClickTargetX, foundPosition.ClickTargetY);
-                    Win32.DoMouseClick();
-                    return ActivateTab(tabName, ++testCycle); // We need to make sure it is now active;
-                }
-
-                // We did not find a tab that matches
-                throw new Exception($"Tab {tabName} not found.");
+                Thread.Sleep(1000); // Give it a second to finish what it's doing
+                return ActivateTab(tabName, ++testCycle);
             }
+            ClickPosition(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            return true;
         }
 
         public void ClearInventory(string recycle_tab = "recycle_tab")
         {
+            Logger.Console.Debug($"Clearing Inventory to {recycle_tab}.");
             // Activate Recycle Tab
             ActivateTab(recycle_tab);
 
@@ -187,6 +204,46 @@ namespace PoE_Trade_Bot.PoEClient
                 Win32.MoveTo(tempPosition.ClickTargetX, tempPosition.ClickTargetY);
                 Win32.CtrlMouseClick();
             }
+            Logger.Console.Debug("Clearing Inventory Complete.");
+        }
+
+        public string GetItemInfo(int clickTargetX, int clickTargetY)
+        {
+            BringToForeground();
+            Win32.MoveTo(clickTargetX, clickTargetY);
+            Thread.Sleep(10);
+            Clipboard.Clear();
+            string ss = null;
+            SendKey("^c");
+            Thread.Sleep(100);
+            ss = Win32.GetText();
+            if (string.IsNullOrWhiteSpace(ss))
+                ss = "empty_string";
+            return ss.Replace("\r", "");
+        }
+
+        public Tab GetTabData(string tabName = "trade_tab")
+        {
+            Logger.Console.Debug($"Tab Scan of {tabName}.");
+
+            ActivateTab(tabName);
+
+            Tab returnTab = new Tab();
+
+            foreach (Position stashData in StashPositions.GetStashPositions(ResolutionEnum))
+            {
+                Position tempPosition = new Position { Left = stashData.Left, Top = stashData.Top, Height = stashData.Height, Width = stashData.Width };
+                TranslatePosition(ref tempPosition);
+
+                ItemInfoParser itemParser = new ItemInfoParser(GetItemInfo(tempPosition.ClickTargetX, tempPosition.ClickTargetY));
+                if (itemParser.Item.Name == "Not For Sell")
+                    continue;
+                itemParser.AddPlace(tempPosition.ClickTargetX, tempPosition.ClickTargetY);
+                returnTab.AddItem(itemParser.Item);
+            }
+
+            Logger.Console.Debug("Tab Scan completed.");
+            return returnTab;
         }
 
         private void Dispose(bool disposing)

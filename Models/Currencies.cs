@@ -18,8 +18,6 @@ namespace PoE_Trade_Bot.Models
         {
             Client = new HttpClient();
             CurrenciesList = new List<Currency_ExRate>();
-
-            Update();
         }
 
         public Currency_ExRate GetCurrencyByName(string name)
@@ -31,23 +29,73 @@ namespace PoE_Trade_Bot.Models
 
             switch (name)
             {
-                case "alt":
-                    name = "alteration";
+                case "gcp":
+                    name = "gemcuttersprism";
                     break;
-
-                case "fuse":
-                    name = "fusing";
+                case "blessed":
+                    name = "blessedorb";
                     break;
-                case "exa":
-                    name = "exalted";
+                case "chrome":
+                    name = "chromaticorb";
+                    break;
+                case "divine":
+                    name = "divineorb";
+                    break;
+                case "exalted":
+                    name = "exaltedorb";
+                    break;
+                case "jewellers":
+                    name = "jewellersorb";
+                    break;
+                case "mirror":
+                    name = "mirrorofkalandra";
                     break;
                 case "alch":
-                    name = "alchemy";
+                    name = "orbofalchemy";
                     break;
-
+                case "alt":
+                    name = "orbofalteration";
+                    break;
+                case "chance":
+                    name = "orbofchance";
+                    break;
+                case "fusing":
+                    name = "orboffusing";
+                    break;
+                case "regret":
+                    name = "orbofregret";
+                    break;
+                case "scour":
+                    name = "orbofscouring";
+                    break;
+                case "transmute":
+                    name = "orboftransmutation";
+                    break;
+                case "regal":
+                    name = "regalorb";
+                    break;
+                case "vaal":
+                    name = "vaalorb";
+                    break;
+                case "aug":
+                    name = "orbofaugmentation";
+                    break;
+                case "chaos":
+                    name = "chaosorb";
+                    break;
+                case "chisel":
+                    name = "cartographerschisel";
+                    break;
             }
 
-            return CurrenciesList.Find((Currency_ExRate c) => c.Name.Contains(name.ToLower()));
+            Currency_ExRate returnRate = CurrenciesList.Find((Currency_ExRate c) => c.NormalName.Equals(name.ToLower()));
+
+            if (returnRate == null)
+            {
+                Logger.Application.Error($"Exchange Rate not found, {name}");
+            }
+
+            return returnRate;
         }
 
         public void Update()
@@ -62,26 +110,9 @@ namespace PoE_Trade_Bot.Models
 
             foreach (Line l in ExchangeRatesJson.Lines)
             {
-                Currency_ExRate c = new Currency_ExRate(l.CurrencyTypeName, l.ChaosEquivalent);
-
-                CurrenciesList.Add(c);
+                CurrenciesList.Add(new Currency_ExRate(l.CurrencyTypeName, l.ChaosEquivalent));
             }
             CurrenciesList.Add(new Currency_ExRate("Chaos Orb", 1));
-
-            //foreach (CurrencyDetail cd in ExchangeRatesJson.CurrencyDetails)
-            //{
-            //    var img = "Assets/Currencies/" + cd.Name.ToLower().Replace(" ", "") + ".png";
-
-            //    if (!File.Exists(img))
-            //    {
-            //        using (WebClient client = new WebClient())
-            //        {
-            //            client.DownloadFile(cd.Icon, img);
-            //        }
-            //    }
-            //}
-
-
             Logger.Console.Info("Curencies updated!");
         }
     }
@@ -89,19 +120,13 @@ namespace PoE_Trade_Bot.Models
     public class Currency_ExRate
     {
         public string Name { get; set; }
-
-        public string ImageName { get; set; }
-
         public double ChaosEquivalent { get; set; }
+        public string NormalName => Name.Replace(" ", "").Replace("'", "");
 
         public Currency_ExRate(string name, double chaosequivalent)
         {
             Name = name.ToLower();
-
             ChaosEquivalent = chaosequivalent;
-
-            ImageName = "Assets/Currencies/" + Name.Replace(" ", "") + ".png";
-
         }
 
         public override string ToString()

@@ -22,17 +22,20 @@ namespace PoE_Trade_Bot
         public static List<CustomerInfo> Customer;
         public static List<CustomerInfo> CompletedTrades;
 
-        private Tab _Tab;
+        private Tab TradeTabData;
 
         public BotEngine()
         {
             Customer = new List<CustomerInfo>();
             CompletedTrades = new List<CustomerInfo>();
+
+            // Get Currencies
+            PoECurrencyManager.Instance.Currencies.Update();
         }
 
         public void StartBot()
         {
-            _Tab = new Tab();
+            TradeTabData = new Tab();
             StartTrader_PoEbota();
             Console.ReadKey();
         }
@@ -42,8 +45,8 @@ namespace PoE_Trade_Bot
         private void StartTrader_PoEbota()
         {
             // Travel to the hideout
+            ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
             ClientManager.Instance.ChatCommand(Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
-
             bool IsFirstTime = true;
 
             DateTime timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
@@ -53,11 +56,8 @@ namespace PoE_Trade_Bot
                 if ((ClientManager.Instance.IsAFK && !Customer.Any()) || (!Customer.Any() && timer < DateTime.Now))
                 {
                     ClientManager.Instance.BringToForeground();
-
-                    ClientManager.Instance.ChatCommand("&I am here");
-
+                    ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
                     timer = DateTime.Now + new TimeSpan(0, new Random().Next(4, 6), 0);
-
                     ClientManager.Instance.IsAFK = false;
                 }
 
@@ -68,29 +68,24 @@ namespace PoE_Trade_Bot
                         IsFirstTime = false;
                         throw new Exception("Stash is not found in the area.");
                     }
-
                     ClientManager.Instance.ClearInventory();
-                    ScanTab();
+                    TradeTabData = ClientManager.Instance.GetTabData("trade_tab");
                     IsFirstTime = false;
                 }
 
                 if (Customer.Any() && !IsFirstTime)
                 {
                     ClientManager.Instance.BringToForeground();
-
                     Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
 
                     #region Many items
-
                     if (Customer.First().OrderType == CustomerInfo.OrderTypes.MANY)
                     {
                         InviteCustomer();
-
                         if (!ClientManager.Instance.OpenStash())
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -99,7 +94,6 @@ namespace PoE_Trade_Bot
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -108,9 +102,7 @@ namespace PoE_Trade_Bot
                         if (!CheckArea())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -119,20 +111,15 @@ namespace PoE_Trade_Bot
                         if (!TradeQuery())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
 
-
                         if (!PutItems())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -140,18 +127,14 @@ namespace PoE_Trade_Bot
                         if (!CheckCurrency())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
                     }
-
                     #endregion
 
                     #region Single item
-
                     if (Customer.First().OrderType == CustomerInfo.OrderTypes.SINGLE)
                     {
                         InviteCustomer();
@@ -160,7 +143,6 @@ namespace PoE_Trade_Bot
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -169,7 +151,6 @@ namespace PoE_Trade_Bot
                         {
                             KickFormParty();
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -178,9 +159,7 @@ namespace PoE_Trade_Bot
                         if (!CheckArea())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -189,9 +168,7 @@ namespace PoE_Trade_Bot
                         if (!TradeQuery())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -200,9 +177,7 @@ namespace PoE_Trade_Bot
                         if (!GetProduct())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
@@ -211,26 +186,17 @@ namespace PoE_Trade_Bot
                         if (!CheckCurrency())
                         {
                             KickFormParty();
-
                             Customer.Remove(Customer.First());
-
                             Logger.Console.Info("\nTrade end!");
                             continue;
                         }
                     }
-
                     #endregion
 
-
-
                     ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} ty gl");
-
                     KickFormParty();
-
                     CompletedTrades.Add(Customer.First());
-
                     Customer.Remove(Customer.First());
-
                     if (!ClientManager.Instance.OpenStash())
                     {
                         Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
@@ -571,7 +537,7 @@ namespace PoE_Trade_Bot
 
                     screen_shot = ScreenCapture.CaptureRectangle(x_trade, y_trade, 465, 200);
 
-                    found_positions = OpenCV_Service.FindCurrencies(screen_shot, cur.ImageName, 0.6);
+                    found_positions = OpenCV_Service.FindCurrencies(screen_shot, StaticUtils.GetCurrencyPath(cur.NormalName), 0.6);
 
                     foreach (Position pos in found_positions)
                     {
@@ -655,140 +621,6 @@ namespace PoE_Trade_Bot
             ClientManager.Instance.ChatCommand("/kick " + Customer.First().Nickname);
         }
 
-        //for many items
-
-        private void ScanTab(string name_tab = "trade_tab")
-        {
-            Position found_pos = null;
-
-            Logger.Console.Debug($"Search {name_tab} trade tab...");
-
-            for (int count_try = 0; count_try < 16; count_try++)
-            {
-                var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
-
-                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"notactive_{name_tab}"));
-
-                if (found_pos.IsVisible)
-                {
-                    break;
-                }
-                else
-                {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"active_{name_tab}"));
-                    if (found_pos.IsVisible)
-                    {
-                        screen_shot.Dispose();
-
-                        break;
-                    }
-                }
-                screen_shot.Dispose();
-
-                Thread.Sleep(500);
-            }
-
-            if (found_pos.IsVisible)
-            {
-                Win32.MoveTo(10 + found_pos.Left + found_pos.Width / 2, 90 + found_pos.Top + found_pos.Height / 2);
-
-                Thread.Sleep(200);
-
-                Win32.DoMouseClick();
-
-                Thread.Sleep(250);
-
-                List<Cell> skip = new List<Cell>();
-
-                for (int i = 0; i < 12; i++)
-                {
-                    for (int j = 0; j < 12; j++)
-                    {
-                        if (skip.Find(cel => cel.Left == i && cel.Top == j) != null)
-                        {
-                            continue;
-                        }
-
-                        Win32.MoveTo(0, 0);
-
-                        Thread.Sleep(100);
-
-                        Win32.MoveTo(Left_Stash64 + 38 * i, Top_Stash64 + 38 * j);
-
-                        #region OpenCv
-
-                        var screen_shot = ScreenCapture.CaptureRectangle(Left_Stash64 - 30 + 38 * i, Top_Stash64 - 30 + 38 * j, 60, 60);
-
-                        Position pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.5);
-
-                        if (!pos.IsVisible)
-                        {
-                            #region Good code
-
-                            string item_info = CtrlC_PoE();
-
-                            if (item_info != "empty_string")
-                            {
-                                var item = new Item
-                                {
-                                    Price = GetPrice_PoE(item_info),
-                                    Name = GetNameItem_PoE_Pro(item_info),
-                                    StackSize = GetStackSize_PoE_Pro(item_info)
-                                };
-
-                                item.Places.Add(new Cell(i, j));
-
-                                if (item.StackSize == 1)
-                                {
-                                    item.SizeInStack = 1;
-                                }
-                                else
-                                {
-                                    item.SizeInStack = (int)GetSizeInStack(item_info);
-                                }
-
-                                if (item.Name.Contains("Resonator"))
-                                {
-                                    if (item.Name.Contains("Potent"))
-                                    {
-                                        item.Places.Add(new Cell(i, j + 1));
-                                        skip.Add(new Cell(i, j + 1));
-
-                                    }
-
-                                    if (item.Name.Contains("Prime") || item.Name.Contains("Powerful"))
-                                    {
-                                        item.Places.Add(new Cell(i, j + 1));
-                                        skip.Add(new Cell(i, j + 1));
-                                        item.Places.Add(new Cell(i + 1, j + 1));
-                                        skip.Add(new Cell(i + 1, j + 1));
-                                        item.Places.Add(new Cell(i + 1, j));
-                                        skip.Add(new Cell(i + 1, j));
-                                    }
-                                }
-
-                                _Tab.AddItem(item);
-
-                                #endregion
-                            }
-
-                            screen_shot.Dispose();
-
-                            #endregion
-                        }
-                    }
-                }
-
-                ClientManager.Instance.SendKey("{ESC}");
-
-                Logger.Console.Debug("Scan is end!");
-            }
-            else
-            {
-                throw new Exception($"{name_tab} not found.");
-            }
-        }
-
         private bool TakeItems(string name_tab = "trade_tab")
         {
             Position found_pos = null;
@@ -837,7 +669,7 @@ namespace PoE_Trade_Bot
                     ForNumberItems = customer.NumberProducts
                 };
 
-                var items = _Tab.GetItems(customer.NumberProducts, customer.Product, min_price);
+                var items = TradeTabData.GetItems(customer.NumberProducts, customer.Product, min_price);
 
                 if (items.Any())
                 {
@@ -865,7 +697,7 @@ namespace PoE_Trade_Bot
                             TotalAmount -= i.SizeInStack;
                             int necessary = customer.NumberProducts - TotalAmount;
                             i.SizeInStack -= necessary;
-                            _Tab.AddItem(i);
+                            TradeTabData.AddItem(i);
                             TotalAmount += necessary;
                             Win32.ShiftClick();
                             Thread.Sleep(100);

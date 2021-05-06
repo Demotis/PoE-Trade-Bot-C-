@@ -30,13 +30,11 @@ namespace PoE_Trade_Bot.Utilities
             tTimer.AutoReset = true;
             tTimer.Enabled = true;
             CheckExchangeRates(null, null);
-
         }
 
         private void CheckExchangeRates(Object source, System.Timers.ElapsedEventArgs e)
         {
             Currencies.Update();
-
         }
 
         private void Dispose(bool disposing)
