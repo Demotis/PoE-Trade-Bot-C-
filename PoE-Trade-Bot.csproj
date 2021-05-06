@@ -118,8 +118,10 @@
     <Compile Include="Services\Win32.cs" />
     <Compile Include="Utilities\Extensions.cs" />
     <Compile Include="Utilities\InventoryPositions.cs" />
+    <Compile Include="Utilities\ItemInfoParser.cs" />
     <Compile Include="Utilities\PoECurrencyManager.cs" />
     <Compile Include="Utilities\Logger.cs" />
+    <Compile Include="Utilities\StashPositions.cs" />
     <Compile Include="Utilities\StaticUtils.cs" />
   </ItemGroup>
   <ItemGroup>

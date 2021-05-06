@@ -37,8 +37,11 @@ namespace PoE_Trade_Bot.Services
                         Height = template.Size.Height
                     };
                 }
-                string guid = Guid.NewGuid().ToString();
-                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+                if (Convert.ToBoolean(ConfigManager.Instance.ApplicationConfig["SaveTestImages"]))
+                {
+                    string guid = Guid.NewGuid().ToString();
+                    result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+                }
             }
 
             return res;
@@ -76,8 +79,11 @@ namespace PoE_Trade_Bot.Services
                     else
                         break;
                 }
-                string guid = Guid.NewGuid().ToString();
-                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+                if (Convert.ToBoolean(ConfigManager.Instance.ApplicationConfig["SaveTestImages"]))
+                {
+                    string guid = Guid.NewGuid().ToString();
+                    result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+                }
             }
 
             return res_pos;
@@ -134,8 +140,12 @@ namespace PoE_Trade_Bot.Services
                     else
                         break;
                 }
-                string guid = Guid.NewGuid().ToString();
-                result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+
+                if (Convert.ToBoolean(ConfigManager.Instance.ApplicationConfig["SaveTestImages"]))
+                {
+                    string guid = Guid.NewGuid().ToString();
+                    result.Save(ConfigManager.Instance.ApplicationConfig["TestImagePath"] + guid + ".png");
+                }
             }
 
             return res_pos;

@@ -5,25 +5,25 @@ using System.Collections.Generic;
 
 namespace PoE_Trade_Bot.Utilities
 {
-    public static class InventoryPositions
+    public static class StashPositions
     {
-        static InventoryPositions()
+        static StashPositions()
         {
-            InventoryPositionData = new Dictionary<int, List<Position>>();
+            StashPositionData = new Dictionary<int, List<Position>>();
 
             // ToDo: Convert this to a foreach of every resolution in the enum
             // Create the positions for 800600
-            Position zeroBlock = new Position { Width = 27, Height = 27, Left = 441, Top = 328 };
-            InventoryPositionData.Add(800600, BuildinventoryPositions(zeroBlock, 2, 2));
+            Position zeroBlock = new Position { Width = 29, Height = 29, Left = 9, Top = 75 };
+            StashPositionData.Add(800600, BuildStashPositions(zeroBlock, 1, 1));
 
         }
 
-        private static List<Position> BuildinventoryPositions(Position zeroBlock, int leftOffset, int topOffset)
+        private static List<Position> BuildStashPositions(Position zeroBlock, int leftOffset, int topOffset)
         {
             List<Position> returnList = new List<Position>();
             for (int left = 0; left < 12; left++)
             {
-                for (int top = 0; top < 5; top++)
+                for (int top = 0; top < 12; top++)
                 {
                     Position position = new Position();
                     position.Left = (zeroBlock.Left + (zeroBlock.Width * left)) + (leftOffset * left);
@@ -36,14 +36,14 @@ namespace PoE_Trade_Bot.Utilities
             return returnList;
         }
 
-        public static List<Position> GetInvenoryPositions(Resolution res)
+        public static List<Position> GetStashPositions(Resolution res)
         {
             int resolutionKey = (int)res;
-            if (!InventoryPositionData.ContainsKey(resolutionKey))
-                throw new Exception($"Inventory Positions for resolution key {resolutionKey} not found.");
-            return InventoryPositionData[resolutionKey];
+            if (!StashPositionData.ContainsKey(resolutionKey))
+                throw new Exception($"Stash Positions for resolution key {resolutionKey} not found.");
+            return StashPositionData[resolutionKey];
         }
 
-        public static Dictionary<int, List<Position>> InventoryPositionData { get; private set; }
+        public static Dictionary<int, List<Position>> StashPositionData { get; private set; }
     }
 }

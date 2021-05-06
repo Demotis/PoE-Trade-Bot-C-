@@ -1,30 +1,28 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoE_Trade_Bot.Models.Test
 {
-    class Tab
+    public class Tab
     {
-        Item[,] _Items;
+
+        //Item[,] _Items;
         Hashtable _SimilarItems;
 
 
         public Tab()
         {
-            _Items = new Item[12, 12];
+            //_Items = new Item[12, 12];
             _SimilarItems = new Hashtable();
         }
 
         public void AddItem(Item item)
         {
-            foreach (Cell c in item.Places)
-            {
-                _Items[c.Left, c.Top] = item;
-            }
+            //foreach (Cell c in item.Places)
+            //{
+            //    _Items[c.Left, c.Top] = item;
+            //}
 
             if (!_SimilarItems.Contains(item.Name))
             {
@@ -56,10 +54,10 @@ namespace PoE_Trade_Bot.Models.Test
                     if (result.Any())
                         foreach (Item i in result)
                         {
-                            foreach (Cell c in i.Places)
-                            {
-                                _Items[c.Left, c.Top] = null;
-                            }
+                            //foreach (Cell c in i.Places)
+                            //{
+                            //    _Items[c.Left, c.Top] = null;
+                            //}
 
                             group.RemoveItem(i);
                         }

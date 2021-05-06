@@ -15,5 +15,10 @@ namespace PoE_Trade_Bot.Utilities
             string returnPath = $"Assets/Currencies/{ConfigManager.Instance.ApplicationConfig["POEResolution"]}/{currency.GetDescription()}.png";
             return returnPath;
         }
+        public static string GetCurrencyPath(string currency)
+        {
+            string returnPath = $"Assets/Currencies/{ConfigManager.Instance.ApplicationConfig["POEResolution"]}/{currency.ToLower()}.png";
+            return returnPath;
+        }
     }
 }

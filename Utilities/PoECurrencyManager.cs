@@ -24,20 +24,21 @@ namespace PoE_Trade_Bot.Utilities
         {
             Currencies = new Currencies();
 
-            // Create timer to access POEninja and check current exchange rates. 
+        }
+
+        public void StartService()
+        {
             tTimer = new System.Timers.Timer();
             tTimer.Interval = 30 * 60 * 1000;
             tTimer.Elapsed += CheckExchangeRates;
             tTimer.AutoReset = true;
             tTimer.Enabled = true;
             CheckExchangeRates(null, null);
-
         }
 
-        private void CheckExchangeRates(Object source, System.Timers.ElapsedEventArgs e)
+        private void CheckExchangeRates(object source, System.Timers.ElapsedEventArgs e)
         {
             Currencies.Update();
-
         }
 
         private void Dispose(bool disposing)
@@ -48,6 +49,7 @@ namespace PoE_Trade_Bot.Utilities
                 {
                     // ToDo: Add code here to stop and dispose the timer
                     tTimer.Stop();
+                    tTimer.Enabled = true;
                     
                 }
                 disposedValue = true;
