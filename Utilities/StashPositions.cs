@@ -9,7 +9,7 @@ namespace PoE_Trade_Bot.Utilities
     {
         static StashPositions()
         {
-            StashPositionData = new Dictionary<int, List<Position>>();
+            StashPositionData = new Dictionary<int, Position[,]>();
 
             // ToDo: Convert this to a foreach of every resolution in the enum
             // Create the positions for 800600
@@ -18,9 +18,9 @@ namespace PoE_Trade_Bot.Utilities
 
         }
 
-        private static List<Position> BuildStashPositions(Position zeroBlock, int leftOffset, int topOffset)
+        private static Position[,] BuildStashPositions(Position zeroBlock, int leftOffset, int topOffset)
         {
-            List<Position> returnList = new List<Position>();
+            Position[,] returnList = new Position[13, 13]; // position 0,0 will be null
             for (int left = 0; left < 12; left++)
             {
                 for (int top = 0; top < 12; top++)
@@ -30,13 +30,13 @@ namespace PoE_Trade_Bot.Utilities
                     position.Top = (zeroBlock.Top + (zeroBlock.Height * top)) + (topOffset * top);
                     position.Width = zeroBlock.Width;
                     position.Height = zeroBlock.Height;
-                    returnList.Add(position);
+                    returnList[left + 1, top + 1] = position;
                 }
             }
             return returnList;
         }
 
-        public static List<Position> GetStashPositions(Resolution res)
+        public static Position[,] GetStashPositions(Resolution res)
         {
             int resolutionKey = (int)res;
             if (!StashPositionData.ContainsKey(resolutionKey))
@@ -44,6 +44,6 @@ namespace PoE_Trade_Bot.Utilities
             return StashPositionData[resolutionKey];
         }
 
-        public static Dictionary<int, List<Position>> StashPositionData { get; private set; }
+        public static Dictionary<int, Position[,]> StashPositionData { get; private set; }
     }
 }

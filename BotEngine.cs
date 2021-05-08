@@ -19,14 +19,14 @@ namespace PoE_Trade_Bot
         private readonly int Top_Stash64 = 135;
         private readonly int Left_Stash64 = 25;
 
-        public static List<CustomerInfo> Customer;
+        public static List<CustomerInfo> CustomerQueue;
         public static List<CustomerInfo> CompletedTrades;
 
         private Tab TradeTabData;
 
         public BotEngine()
         {
-            Customer = new List<CustomerInfo>();
+            CustomerQueue = new List<CustomerInfo>();
             CompletedTrades = new List<CustomerInfo>();
             TradeTabData = new Tab();
 
@@ -56,153 +56,151 @@ namespace PoE_Trade_Bot
         {
             while (true)
             {
-                if (!Customer.Any())
+                if (!CustomerQueue.Any())
                 {
                     Thread.Sleep(500);
                     continue;
                 }
 
-                ClientManager.Instance.BringToForeground();
-                Logger.Console.Info($"\nTrade start with {Customer.First().Nickname}");
+                // We have a customer in queue
+                CustomerInfo customer = CustomerQueue.First();
 
                 #region Many items
-                if (Customer.First().OrderType == CustomerInfo.OrderTypes.MANY)
+                if (customer.OrderType == CustomerInfo.OrderTypes.CURRENCY)
                 {
-                    InviteCustomer();
-                    if (!ClientManager.Instance.OpenStash())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    if (!TakeItems())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //check is area contain customer
-                    if (!CheckArea())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //start trade
-                    if (!TradeQuery())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    if (!PutItems())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    if (!CheckCurrency())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
+                    if (ProcessCurrencySale(customer))
+                        ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
                 }
                 #endregion
 
-                #region Single item
-                if (Customer.First().OrderType == CustomerInfo.OrderTypes.SINGLE)
+                if (customer.OrderType == CustomerInfo.OrderTypes.ITEM)
                 {
-                    InviteCustomer();
-
-                    if (!ClientManager.Instance.OpenStash())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    if (!TakeProduct())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //check is area contain customer
-                    if (!CheckArea())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //start trade
-                    if (!TradeQuery())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //get product
-                    if (!GetProduct())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-
-                    //search and check currency
-                    if (!CheckCurrency())
-                    {
-                        KickFormParty();
-                        Customer.Remove(Customer.First());
-                        Logger.Console.Info("\nTrade end!");
-                        continue;
-                    }
-                }
-                #endregion
-
-                ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} ty gl");
-                KickFormParty();
-                CompletedTrades.Add(Customer.First());
-                Customer.Remove(Customer.First());
-                if (!ClientManager.Instance.OpenStash())
-                {
-                    Logger.Console.Warn("Stash not found. I cant clean inventory after trade.");
-                }
-                else
-                {
-                    ClientManager.Instance.ClearInventory();
+                    if (ProcessItemSale(customer))
+                        ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
                 }
 
-                Logger.Console.Info("Trade comlete sccessfull");
+                // Cleanup After Trade - We are going to send the Kick command even if we didn't add customer
+                BotEngineUtils.KickFromParty(customer);
+                CompletedTrades.Add(customer);
+                CustomerQueue.Remove(customer);
+                if (!ClientManager.Instance.ClearInventory())
+                    Logger.Console.Error("Stash not found. I cant clean inventory after trade.");
+                
+                Logger.Console.Info("Trade Complete");
             }
+        }
+
+        private bool ProcessCurrencySale(CustomerInfo customer)
+        {
+            if (!ClientManager.Instance.OpenStash())
+                return NotifyItemSold(customer); // We have an issue opening the Stash
+
+            InviteCustomer();
+
+            if (!TakeItems())
+            {
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            //check is area contain customer
+            if (!CheckArea())
+            {
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            //start trade
+            if (!TradeQuery())
+            {
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            if (!PutItems())
+            {
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            if (!CheckCurrency())
+            {
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+            return true;
+        }
+
+        private bool ProcessItemSale(CustomerInfo customer)
+        {
+            if (!ClientManager.Instance.OpenStash())
+                return NotifyItemSold(customer); // We have an issue opening the Stash
+
+            // Check for Product in Stash
+            if (!VerifyProduct(customer))
+                return NotifyItemSold(customer);
+
+            // Trade Ready let's send the Invite
+            InviteCustomer();
+
+            // Wait for Customer to arrive at Hideout
+            if (!CheckArea(customer))
+                return false;
+
+            // Get the 
+            if (!TakeProduct())
+            {
+                KickFromParty();
+                CustomerQueue.Remove(CustomerQueue.First());
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            //start trade
+            if (!TradeQuery())
+            {
+                KickFromParty();
+                CustomerQueue.Remove(CustomerQueue.First());
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            //get product
+            if (!GetProduct())
+            {
+                KickFromParty();
+                CustomerQueue.Remove(CustomerQueue.First());
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+            //search and check currency
+            if (!CheckCurrency())
+            {
+                KickFromParty();
+                CustomerQueue.Remove(CustomerQueue.First());
+                Logger.Console.Info("\nTrade end!");
+                continue;
+            }
+
+        }
+
+
+        /// <summary>
+        /// Notifies the item sold.
+        /// This is also a default message to send if there is an issue with any trade action
+        /// </summary>
+        /// <param name="customer">The customer.</param>
+        private bool NotifyItemSold(CustomerInfo customer)
+        {
+            Logger.Console.Fatal("There was an issue with sale, please check log.");
+            return ClientManager.Instance.ChatCommand($"@{customer.Nickname} Sorry, sold it already.");
         }
 
         private void InviteCustomer()
         {
-            ClientManager.Instance.BringToForeground();
-            Logger.Console.Info("Invite in party...");
-            string command = "/invite " + Customer.First().Nickname;
-            ClientManager.Instance.ChatCommand(command);
+            Logger.Console.Info($"Inviting  {CustomerQueue.First().Nickname}");
+            ClientManager.Instance.ChatCommand($"/invite {CustomerQueue.First().Nickname}");
         }
 
         private bool TakeProduct()
@@ -211,6 +209,8 @@ namespace PoE_Trade_Bot
             Position found_pos = null;
 
             Logger.Console.Debug("Search trade tab...");
+
+            ClientManager.Instance.ActivateTab("trade_tab")
 
             for (int count_try = 0; count_try < 16; count_try++)
             {
@@ -238,15 +238,19 @@ namespace PoE_Trade_Bot
 
             if (found_pos.IsVisible)
             {
+
                 Win32.MoveTo(10 + found_pos.Left + found_pos.Width / 2, 90 + found_pos.Top + found_pos.Height / 2);
 
                 Thread.Sleep(100);
 
                 Win32.DoMouseClick();
 
+
+
+
                 Thread.Sleep(300);
 
-                Win32.MoveTo(Left_Stash64 + 38 * (Customer.First().Left - 1), Top_Stash64 + 38 * (Customer.First().Top - 1));
+                Win32.MoveTo(Left_Stash64 + 38 * (CustomerQueue.First().Left - 1), Top_Stash64 + 38 * (CustomerQueue.First().Top - 1));
 
                 Thread.Sleep(1000);
 
@@ -254,11 +258,11 @@ namespace PoE_Trade_Bot
 
                 string product_clip = GetNameItem_PoE(ctrlc);
 
-                if (product_clip == null || !Customer.First().Product.Contains(product_clip))
+                if (product_clip == null || !CustomerQueue.First().Product.Contains(product_clip))
                 {
                     Logger.Console.Info("not found item");
 
-                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} I sold it, sry");
+                    ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} I sold it, sry");
 
                     ClientManager.Instance.SendKey("{ESC}");
 
@@ -269,7 +273,7 @@ namespace PoE_Trade_Bot
                 {
                     Logger.Console.Info("Fake price");
 
-                    ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} It is not my price!");
+                    ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} It is not my price!");
 
                     ClientManager.Instance.SendKey("{ESC}");
 
@@ -293,15 +297,14 @@ namespace PoE_Trade_Bot
             return false;
         }
 
-        private bool CheckArea()
+        private bool CheckArea(CustomerInfo customer, int secondsToWait = 30)
         {
             Logger.Console.Debug("Check area...");
-            for (int i = 0; i < 60; i++)
+            int halfSeconds = secondsToWait * 2;
+            for (int i = 0; i < halfSeconds; i++)
             {
-                if (Customer.First().IsInArea)
-                {
+                if (customer.IsInArea)
                     return true;
-                }
                 Thread.Sleep(500);
             }
             Logger.Console.Warn("Player not here");
@@ -347,13 +350,13 @@ namespace PoE_Trade_Bot
                         else
                         {
                             Logger.Console.Debug("i write trade");
-                            string trade_command = "/tradewith " + Customer.First().Nickname;
+                            string trade_command = "/tradewith " + CustomerQueue.First().Nickname;
 
                             ClientManager.Instance.ChatCommand(trade_command);
 
                             screen_shot = ScreenCapture.CaptureRectangle(455, 285, 475, 210);
 
-                            if (!Customer.First().IsInArea)
+                            if (!CustomerQueue.First().IsInArea)
                                 return false;
 
                             found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_waiting"));
@@ -442,7 +445,7 @@ namespace PoE_Trade_Bot
                         if (ss == "empty_string")
                             continue;
 
-                        if (Customer.First().Product.Contains(GetNameItem_PoE(ss)))
+                        if (CustomerQueue.First().Product.Contains(GetNameItem_PoE(ss)))
                         {
                             Logger.Console.Debug($"{ss} is found in inventory");
 
@@ -459,7 +462,7 @@ namespace PoE_Trade_Bot
             }
             ClientManager.Instance.SendKey("{ESC}");
 
-            ClientManager.Instance.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
+            ClientManager.Instance.ChatCommand("@" + CustomerQueue.First().Nickname + " i sold it, sry");
 
             return false;
         }
@@ -472,31 +475,31 @@ namespace PoE_Trade_Bot
 
             //set main currencies
 
-            main_currs.Add(Customer.First().Currency);
+            main_currs.Add(CustomerQueue.First().Currency);
 
-            if (Customer.First().Currency.Name != "chaos orb")
+            if (CustomerQueue.First().Currency.Name != "chaos orb")
             {
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("chaos"));
             }
 
-            if (Customer.First().Currency.Name != "divine orb")
+            if (CustomerQueue.First().Currency.Name != "divine orb")
             {
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("divine"));
             }
 
-            if (Customer.First().Currency.Name != "exalted orb")
+            if (CustomerQueue.First().Currency.Name != "exalted orb")
             {
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
             }
 
-            if (Customer.First().Currency.Name != "orb of alchemy")
+            if (CustomerQueue.First().Currency.Name != "orb of alchemy")
             {
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("alchemy"));
             }
 
-            if (Customer.First().Currency.Name == "exalted orb")
+            if (CustomerQueue.First().Currency.Name == "exalted orb")
             {
-                ClientManager.Instance.ChatCommand($"@{Customer.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
+                ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
 
                 main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
             }
@@ -542,13 +545,13 @@ namespace PoE_Trade_Bot
                         screen_shot.Dispose();
                     }
 
-                    if (price >= Customer.First().Chaos_Price && price != 0)
+                    if (price >= CustomerQueue.First().Chaos_Price && price != 0)
                         break;
                 }
 
-                Logger.Console.Info("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + Customer.First().Chaos_Price);
+                Logger.Console.Info("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + CustomerQueue.First().Chaos_Price);
 
-                if (price >= Customer.First().Chaos_Price)
+                if (price >= CustomerQueue.First().Chaos_Price)
                 {
                     Logger.Console.Debug("I want accept trade");
 
@@ -568,16 +571,16 @@ namespace PoE_Trade_Bot
 
                         var timer = DateTime.Now + new TimeSpan(0, 0, 5);
 
-                        while (Customer.First().TradeStatus != CustomerInfo.TradeStatuses.ACCEPTED)
+                        while (CustomerQueue.First().TradeStatus != CustomerInfo.TradeStatuses.ACCEPTED)
                         {
-                            if (Customer.First().TradeStatus == CustomerInfo.TradeStatuses.CANCELED)
+                            if (CustomerQueue.First().TradeStatus == CustomerInfo.TradeStatuses.CANCELED)
                                 return false;
 
                             if (DateTime.Now > timer)
                                 break;
                         }
 
-                        if (Customer.First().TradeStatus == CustomerInfo.TradeStatuses.ACCEPTED)
+                        if (CustomerQueue.First().TradeStatus == CustomerInfo.TradeStatuses.ACCEPTED)
                             return true;
 
                         else continue;
@@ -597,120 +600,81 @@ namespace PoE_Trade_Bot
             return false;
         }
 
-        private void KickFormParty()
+
+
+        private bool TakeItems(string tabName = "trade_tab")
         {
-            ClientManager.Instance.ChatCommand("/kick " + Customer.First().Nickname);
-        }
+            Logger.Console.Info($"Gettting Items for Trade");
 
-        private bool TakeItems(string name_tab = "trade_tab")
-        {
-            Position found_pos = null;
+            if (!ClientManager.Instance.ActivateTab(tabName))
+                return false;
 
-            Logger.Console.Debug($"Search {name_tab} trade tab...");
+            var customer = CustomerQueue.First();
 
-            for (int count_try = 0; count_try < 16; count_try++)
+            var min_price = new Price
             {
-                var screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
+                Cost = customer.Cost,
+                CurrencyType = customer.Currency,
+                ForNumberItems = customer.NumberProducts
+            };
 
-                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"notactive_{name_tab}"));
+            var items = TradeTabData.GetItems(customer.NumberProducts, customer.Product, min_price);
 
-                if (found_pos.IsVisible)
-                    break;
-                else
+            if (items.Any())
+            {
+                int TotalAmount = 0;
+
+                foreach (Item i in items)
                 {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath($"active_{name_tab}"));
-                    if (found_pos.IsVisible)
-                    {
-                        screen_shot.Dispose();
+                    TotalAmount += i.SizeInStack;
 
-                        break;
+                    Win32.MoveTo(Left_Stash64 + 38 * i.Places.First().Left, Top_Stash64 + 38 * i.Places.First().Top);
+
+                    Thread.Sleep(100);
+
+                    string item_info = CtrlC_PoE();
+
+                    if (!item_info.Contains(i.Name))
+                    {
+                        Logger.Console.Info("Information incorrect.");
+
+                        return false;
                     }
-                }
-                screen_shot.Dispose();
 
-                Thread.Sleep(500);
-            }
-
-            if (found_pos.IsVisible)
-            {
-                Win32.MoveTo(10 + found_pos.Left + found_pos.Width / 2, 90 + found_pos.Top + found_pos.Height / 2);
-
-                Thread.Sleep(200);
-
-                Win32.DoMouseClick();
-
-                Thread.Sleep(250);
-
-                var customer = Customer.First();
-
-                var min_price = new Price
-                {
-                    Cost = customer.Cost,
-                    CurrencyType = customer.Currency,
-                    ForNumberItems = customer.NumberProducts
-                };
-
-                var items = TradeTabData.GetItems(customer.NumberProducts, customer.Product, min_price);
-
-                if (items.Any())
-                {
-                    int TotalAmount = 0;
-
-                    foreach (Item i in items)
+                    if (TotalAmount > customer.NumberProducts)
                     {
-                        TotalAmount += i.SizeInStack;
-
-                        Win32.MoveTo(Left_Stash64 + 38 * i.Places.First().Left, Top_Stash64 + 38 * i.Places.First().Top);
-
+                        TotalAmount -= i.SizeInStack;
+                        int necessary = customer.NumberProducts - TotalAmount;
+                        i.SizeInStack -= necessary;
+                        TradeTabData.AddItem(i);
+                        TotalAmount += necessary;
+                        Win32.ShiftClick();
                         Thread.Sleep(100);
+                        ClientManager.Instance.SendNumber(necessary);
+                        ClientManager.Instance.SendKey("{ENTER}");
+                        PutInInventory();
 
-                        string item_info = CtrlC_PoE();
-
-                        if (!item_info.Contains(i.Name))
-                        {
-                            Logger.Console.Info("Information incorrect.");
-
-                            return false;
-                        }
-
-                        if (TotalAmount > customer.NumberProducts)
-                        {
-                            TotalAmount -= i.SizeInStack;
-                            int necessary = customer.NumberProducts - TotalAmount;
-                            i.SizeInStack -= necessary;
-                            TradeTabData.AddItem(i);
-                            TotalAmount += necessary;
-                            Win32.ShiftClick();
-                            Thread.Sleep(100);
-                            ClientManager.Instance.SendNumber(necessary);
-                            ClientManager.Instance.SendKey("{ENTER}");
-                            PutInInventory();
-
-                        }
-                        else
-                        {
-                            Win32.CtrlMouseClick();
-                        }
+                    }
+                    else
+                    {
+                        Win32.CtrlMouseClick();
+                    }
 
 
-                        if (TotalAmount == customer.NumberProducts)
-                        {
-                            ClientManager.Instance.SendKey("{ESC}");
+                    if (TotalAmount == customer.NumberProducts)
+                    {
+                        ClientManager.Instance.SendKey("{ESC}");
 
-                            return true;
-                        }
+                        return true;
                     }
                 }
-                else
-                {
-                    Logger.Console.Info("Items not found!");
-
-                    ClientManager.Instance.ChatCommand($"@{customer.Nickname} maybe I sold it");
-                }
-
+            }
+            else
+            {
+                Logger.Console.Info("Items not found!");
+                ClientManager.Instance.ChatCommand($"@{customer.Nickname} Sold Sorry");
             }
 
-            Logger.Console.Warn("Tab not found");
 
             return false;
         }
@@ -754,7 +718,7 @@ namespace PoE_Trade_Bot
             int y_inventory = 440;
             int offset = 37;
 
-            var customer = Customer.First();
+            var customer = CustomerQueue.First();
 
             int TotalAmount = 0;
 
@@ -829,7 +793,7 @@ namespace PoE_Trade_Bot
             }
             ClientManager.Instance.SendKey("{ESC}");
 
-            ClientManager.Instance.ChatCommand("@" + Customer.First().Nickname + " i sold it, sry");
+            ClientManager.Instance.ChatCommand("@" + CustomerQueue.First().Nickname + " i sold it, sry");
 
             return false;
         }
@@ -942,7 +906,7 @@ namespace PoE_Trade_Bot
 
                         double price = Convert.ToDouble(result);
 
-                        if (price <= Customer.First().Cost)
+                        if (price <= CustomerQueue.First().Cost)
                             isvalidprice = true;
 
                         int length = str.Length - 1;
@@ -959,7 +923,7 @@ namespace PoE_Trade_Bot
 
                         result = str.Substring(begin, str.Length - begin).Replace("\r", "");
 
-                        if (PoECurrencyManager.Instance.Currencies.GetCurrencyByName(result).Name == Customer.First().Currency.Name)
+                        if (PoECurrencyManager.Instance.Currencies.GetCurrencyByName(result).Name == CustomerQueue.First().Currency.Name)
                         {
                             isvalidcurrency = true;
                         }

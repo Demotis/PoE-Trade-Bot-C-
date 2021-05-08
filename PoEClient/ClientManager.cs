@@ -41,7 +41,8 @@ namespace PoE_Trade_Bot.PoEClient
 
             ResolutionEnum = (Resolution)Convert.ToInt32(ConfigManager.Instance.ApplicationConfig["POEResolution"]);
 
-            SetCurrentPosition();
+            if (!BringToForeground())
+                throw new Exception("Error accessing Path of Exile!");
 
             StartAFKService();
         }
@@ -57,43 +58,54 @@ namespace PoE_Trade_Bot.PoEClient
 
         private void AfkTimerTick(object source, System.Timers.ElapsedEventArgs e)
         {
-            if (!BotEngine.Customer.Any())
+            if (!BotEngine.CustomerQueue.Any())
                 ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
         }
 
-        public void ValidateProcess()
+        public bool ValidateProcess()
         {
             if (ActiveProcess == null)
-                throw new Exception("Path of Exile process not set.");
+                return false;
             if (ActiveProcess.HasExited)
-                throw new Exception("Path of Exile process has been closed.");
+                return false;
             if (!ActiveProcess.ProcessName.ToLower().Contains(ConfigManager.Instance.ApplicationConfig["POEProcessName"].ToLower()))
-                throw new Exception("Active Process is not Path of Exile.");
+                return false;
+            return true;
         }
 
-        public void BringToForeground()
+        public bool BringToForeground()
         {
-            ValidateProcess();
+            if (!ValidateProcess())
+                return false;
             if (!Win32.SetForegroundWindow(ActiveProcess.MainWindowHandle))
-                throw new Exception($"Unable to set POE Process as foreground window");
-            SetCurrentPosition();
+                return false;
+            return SetCurrentPosition();
         }
 
-        public void SetCurrentPosition()
+        public bool SetCurrentPosition()
         {
-            WINDOWINFO info = new WINDOWINFO();
-            info.cbSize = (uint)Marshal.SizeOf(info);
-            Win32.GetWindowInfo(ActiveProcess.MainWindowHandle, ref info);
+            try
+            {
+                WINDOWINFO info = new WINDOWINFO();
+                info.cbSize = (uint)Marshal.SizeOf(info);
+                Win32.GetWindowInfo(ActiveProcess.MainWindowHandle, ref info);
 
 
-            Rectangle rect = new Rectangle();
-            rect.X = info.rcClient.Left;
-            rect.Y = info.rcClient.Top;
-            rect.Height = info.rcClient.Bottom - info.rcClient.Top;
-            rect.Width = info.rcClient.Right - info.rcClient.Left;
+                Rectangle rect = new Rectangle();
+                rect.X = info.rcClient.Left;
+                rect.Y = info.rcClient.Top;
+                rect.Height = info.rcClient.Bottom - info.rcClient.Top;
+                rect.Width = info.rcClient.Right - info.rcClient.Left;
 
-            // Win32.GetWindowRect(ActiveProcess.MainWindowHandle, out rect);
-            WindowRect = rect;
+                // Win32.GetWindowRect(ActiveProcess.MainWindowHandle, out rect);
+                WindowRect = rect;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Application.Fatal("SetCurrentPosition", ex);
+                return false;
+            }
         }
 
         public bool GetProcess(string processName, out Process process)
@@ -110,31 +122,38 @@ namespace PoE_Trade_Bot.PoEClient
             return false;
         }
 
-        public void SendKey(string key)
+        public bool SendKey(string key)
         {
-            BringToForeground();
+            if (!BringToForeground())
+                return false;
             SendKeys.SendWait(key);
+            return true;
         }
 
-        public void ChatCommand(string command)
+        public bool ChatCommand(string command)
         {
-            BringToForeground();
+            Logger.Console.Info($"CONSOLE: {command}");
+            if (!BringToForeground())
+                return false;
             SendKeys.SendWait("{ENTER}");
             foreach (char c in command)
             {
                 SendKeys.SendWait(c.ToString());
             }
             SendKeys.SendWait("{ENTER}");
+            return true;
         }
 
-        public void SendNumber(int number)
+        public bool SendNumber(int number)
         {
-            BringToForeground();
+            if (!BringToForeground())
+                return false;
             string str = $"{number}";
             foreach (Char c in str)
             {
                 SendKeys.SendWait(c.ToString());
             }
+            return true;
         }
 
         private void TranslatePosition(ref Position relativePosition)
@@ -151,7 +170,8 @@ namespace PoE_Trade_Bot.PoEClient
             if (testCycle > 20)
                 return false;
 
-            BringToForeground();
+            if (!BringToForeground())
+                return false;
 
             Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("open_stash"), 0.90);
             if (absolutePosition != null)
@@ -193,9 +213,10 @@ namespace PoE_Trade_Bot.PoEClient
                 return false;
 
             if (!OpenStash())
-                throw new Exception("Unable to open Stash");
+                return false;
 
-            BringToForeground();
+            if (!BringToForeground())
+                return false;
             Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"active_{tabName}"));
             if (absolutePosition == null) // Active Tab not found, let's look for inactive tab
                 absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"notactive_{tabName}"));
@@ -208,11 +229,12 @@ namespace PoE_Trade_Bot.PoEClient
             return true;
         }
 
-        public void ClearInventory(string recycle_tab = "recycle_tab")
+        public bool ClearInventory(string recycle_tab = "recycle_tab")
         {
             Logger.Console.Debug($"Clearing Inventory to {recycle_tab}.");
             // Activate Recycle Tab
-            ActivateTab(recycle_tab);
+            if (!ActivateTab(recycle_tab))
+                return false;
 
             // Now move everything from Inventory to Stash
             // We do not care what the item is at this point just CTRL+Click every block
@@ -224,11 +246,13 @@ namespace PoE_Trade_Bot.PoEClient
                 Win32.CtrlMouseClick();
             }
             Logger.Console.Debug("Clearing Inventory Complete.");
+            return true;
         }
 
         public string GetItemInfo(int clickTargetX, int clickTargetY)
         {
-            BringToForeground();
+            if (!BringToForeground())
+                return "empty_string";
             Win32.MoveTo(clickTargetX, clickTargetY);
             Thread.Sleep(10);
             Clipboard.Clear();
@@ -245,12 +269,14 @@ namespace PoE_Trade_Bot.PoEClient
         {
             Logger.Console.Debug($"Tab Scan of {tabName}.");
 
-            ActivateTab(tabName);
-
             Tab returnTab = new Tab();
+
+            if (!ActivateTab(tabName))
+                return returnTab;
 
             foreach (Position stashData in StashPositions.GetStashPositions(ResolutionEnum))
             {
+                if (stashData == null) continue;
                 Position tempPosition = new Position { Left = stashData.Left, Top = stashData.Top, Height = stashData.Height, Width = stashData.Width };
                 TranslatePosition(ref tempPosition);
 

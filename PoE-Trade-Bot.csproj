@@ -99,6 +99,7 @@
     <Compile Include="Enums\Resolution.cs" />
     <Compile Include="PoEClient\ClientManager.cs" />
     <Compile Include="PoEClient\LogManager.cs" />
+    <Compile Include="Utilities\BotEngineUtils.cs" />
     <Compile Include="Utilities\ConfigManager.cs" />
     <Compile Include="Models\FossilsJson.cs" />
     <Compile Include="Models\MapsJson.cs" />

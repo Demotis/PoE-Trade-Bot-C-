@@ -89,7 +89,7 @@ namespace PoE_Trade_Bot.PoEClient
                 {
                     var cus_inf = new CustomerInfo();
 
-                    cus_inf.OrderType = CustomerInfo.OrderTypes.SINGLE;
+                    cus_inf.OrderType = CustomerInfo.OrderTypes.ITEM;
 
                     int length;
                     int begin;
@@ -152,7 +152,7 @@ namespace PoE_Trade_Bot.PoEClient
 
                     if (cus_inf.IsReady)
                     {
-                        BotEngine.Customer.Add(cus_inf);
+                        BotEngine.CustomerQueue.Add(cus_inf);
                         Logger.Console.Info(cus_inf.ToString());
                     }
                 }
@@ -161,7 +161,7 @@ namespace PoE_Trade_Bot.PoEClient
                 {
                     var cus = new CustomerInfo();
 
-                    cus.OrderType = CustomerInfo.OrderTypes.MANY;
+                    cus.OrderType = CustomerInfo.OrderTypes.CURRENCY;
 
                     cus.Nickname = Regex.Replace(logLine, @"([\w\s\W]+@From )|(: [\w\W\s]*)|(<[\w\W\s]+> )", "");
 
@@ -177,7 +177,7 @@ namespace PoE_Trade_Bot.PoEClient
 
                     if (cus.IsReady)
                     {
-                        BotEngine.Customer.Add(cus);
+                        BotEngine.CustomerQueue.Add(cus);
                         Logger.Console.Info(cus.ToString());
                     }
 
@@ -189,27 +189,27 @@ namespace PoE_Trade_Bot.PoEClient
             }
 
             //check area
-            if (BotEngine.Customer.Any())
+            if (BotEngine.CustomerQueue.Any())
             {
-                if (logLine.Contains(BotEngine.Customer.First().Nickname) && logLine.Contains("has joined the area"))
+                if (logLine.Contains(BotEngine.CustomerQueue.First().Nickname) && logLine.Contains("has joined the area"))
                 {
-                    Logger.Console.Info($"Customer has arrived {BotEngine.Customer.First().Nickname}");
-                    BotEngine.Customer.First().IsInArea = true;
+                    Logger.Console.Info($"Customer has arrived {BotEngine.CustomerQueue.First().Nickname}");
+                    BotEngine.CustomerQueue.First().IsInArea = true;
                 }
 
                 if (logLine.Contains("Player not found in this area."))
                 {
-                    BotEngine.Customer.First().IsInArea = false;
+                    BotEngine.CustomerQueue.First().IsInArea = false;
                 }
 
                 if (logLine.Contains(": Trade accepted."))
                 {
-                    BotEngine.Customer.First().TradeStatus = CustomerInfo.TradeStatuses.ACCEPTED;
+                    BotEngine.CustomerQueue.First().TradeStatus = CustomerInfo.TradeStatuses.ACCEPTED;
                 }
 
                 if (logLine.Contains(": Trade cancelled."))
                 {
-                    BotEngine.Customer.First().TradeStatus = CustomerInfo.TradeStatuses.CANCELED;
+                    BotEngine.CustomerQueue.First().TradeStatus = CustomerInfo.TradeStatuses.CANCELED;
                 }
             }
 

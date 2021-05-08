@@ -15,7 +15,8 @@ namespace PoE_Trade_Bot.Models
 
         public enum OrderTypes
         {
-            SINGLE, MANY
+            ITEM,
+            CURRENCY
         }
 
         public string Nickname { get; set; }
@@ -38,7 +39,7 @@ namespace PoE_Trade_Bot.Models
         {
             get
             {
-                if (OrderType == OrderTypes.SINGLE)
+                if (OrderType == OrderTypes.ITEM)
                 {
                     if (Nickname != null && Product != null && Cost > 0 && Stash_Tab != null && Currency != null)
                     {
@@ -72,7 +73,7 @@ namespace PoE_Trade_Bot.Models
 
         public override string ToString()
         {
-            if (OrderType == OrderTypes.SINGLE)
+            if (OrderType == OrderTypes.ITEM)
             {
                 return $"\nNickname: <{Nickname}> \n" +
                 $"Order Typer: <{OrderType}> \n" +
