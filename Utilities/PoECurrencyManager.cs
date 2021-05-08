@@ -51,6 +51,7 @@ namespace PoE_Trade_Bot.Utilities
                     tTimer.Stop();
                     tTimer.Enabled = true;
                     
+                    
                 }
                 disposedValue = true;
             }
