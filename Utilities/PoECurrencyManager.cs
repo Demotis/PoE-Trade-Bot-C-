@@ -12,10 +12,9 @@ namespace PoE_Trade_Bot.Utilities
         public static PoECurrencyManager Instance => instance;
         private System.Timers.Timer tTimer;
 
-
         public Currencies Currencies { get; private set; }
 
-
+        
 
         static PoECurrencyManager()
         {
@@ -46,9 +45,13 @@ namespace PoE_Trade_Bot.Utilities
         {
             if (!disposedValue)
             {
-                if (disposing)
+                if (tTimer.Enabled)
                 {
                     // ToDo: Add code here to stop and dispose the timer
+                    tTimer.Stop();
+                    tTimer.Enabled = true;
+                    
+                    
                 }
                 disposedValue = true;
             }
