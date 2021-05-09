@@ -8,9 +8,20 @@ namespace PoE_Trade_Bot.Models
 
         public int Top { get; set; } = -1;
 
-        public int Width { get; set; }
+        public int Width { get; set; } = 1;
 
-        public int Height { get; set; }
+        public int Height { get; set; } = 1;
+
+        public Position Clone()
+        {
+            return new Position
+            {
+                Left = this.Left,
+                Top = this.Top,
+                Width = this.Width,
+                Height = this.Height
+            };
+        }
 
         public bool IsVisible
         {

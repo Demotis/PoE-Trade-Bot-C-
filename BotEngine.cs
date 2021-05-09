@@ -15,10 +15,6 @@ namespace PoE_Trade_Bot
 {
     public class BotEngine
     {
-
-        private readonly int Top_Stash64 = 135;
-        private readonly int Left_Stash64 = 25;
-
         public static List<CustomerInfo> CustomerQueue;
         public static List<CustomerInfo> CompletedTrades;
 
@@ -65,19 +61,13 @@ namespace PoE_Trade_Bot
                 // We have a customer in queue
                 CustomerInfo customer = CustomerQueue.First();
 
-                #region Many items
-                if (customer.OrderType == CustomerInfo.OrderTypes.CURRENCY)
-                {
-                    if (ProcessCurrencySale(customer))
-                        ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
-                }
-                #endregion
+                if (customer.OrderType == CustomerInfo.OrderTypes.CURRENCY &&
+                    ProcessCurrencySale(customer))
+                    ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
 
-                if (customer.OrderType == CustomerInfo.OrderTypes.ITEM)
-                {
-                    if (ProcessItemSale(customer))
-                        ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
-                }
+                if (customer.OrderType == CustomerInfo.OrderTypes.ITEM &&
+                    ProcessItemSale(customer))
+                    ClientManager.Instance.ChatCommand($"@{customer.Nickname} Thank you for the trade.");
 
                 // Cleanup After Trade - We are going to send the Kick command even if we didn't add customer
                 BotEngineUtils.KickFromParty(customer);
@@ -85,7 +75,7 @@ namespace PoE_Trade_Bot
                 CustomerQueue.Remove(customer);
                 if (!ClientManager.Instance.ClearInventory())
                     Logger.Console.Error("Stash not found. I cant clean inventory after trade.");
-                
+
                 Logger.Console.Info("Trade Complete");
             }
         }
@@ -95,27 +85,16 @@ namespace PoE_Trade_Bot
             if (!ClientManager.Instance.OpenStash())
                 return NotifyItemSold(customer); // We have an issue opening the Stash
 
-            InviteCustomer();
-
             if (!TakeItems())
-            {
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+                return NotifyItemSold(customer);
 
-            //check is area contain customer
-            if (!CheckArea())
-            {
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+            // Trade Ready let's send the Invite
+            if (!BotEngineUtils.InviteCustomer(customer))
+                return false;
 
             //start trade
-            if (!TradeQuery())
-            {
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+            if (!OpenTradeWindow(customer))
+                return false;
 
             if (!PutItems())
             {
@@ -136,53 +115,27 @@ namespace PoE_Trade_Bot
             if (!ClientManager.Instance.OpenStash())
                 return NotifyItemSold(customer); // We have an issue opening the Stash
 
-            // Check for Product in Stash
-            if (!VerifyProduct(customer))
+            // Get the Item from Stash to Inventory
+            if (!TakeProduct(customer))
                 return NotifyItemSold(customer);
 
             // Trade Ready let's send the Invite
-            InviteCustomer();
-
-            // Wait for Customer to arrive at Hideout
-            if (!CheckArea(customer))
+            if (!BotEngineUtils.InviteCustomer(customer))
                 return false;
 
-            // Get the 
-            if (!TakeProduct())
-            {
-                KickFromParty();
-                CustomerQueue.Remove(CustomerQueue.First());
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
-
             //start trade
-            if (!TradeQuery())
-            {
-                KickFromParty();
-                CustomerQueue.Remove(CustomerQueue.First());
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+            if (!OpenTradeWindow(customer))
+                return false;
 
             //get product
-            if (!GetProduct())
-            {
-                KickFromParty();
-                CustomerQueue.Remove(CustomerQueue.First());
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+            if (!GetProduct(customer))
+                return false;
 
             //search and check currency
             if (!CheckCurrency())
-            {
-                KickFromParty();
-                CustomerQueue.Remove(CustomerQueue.First());
-                Logger.Console.Info("\nTrade end!");
-                continue;
-            }
+                return false;
 
+            return true;
         }
 
 
@@ -197,128 +150,30 @@ namespace PoE_Trade_Bot
             return ClientManager.Instance.ChatCommand($"@{customer.Nickname} Sorry, sold it already.");
         }
 
-        private void InviteCustomer()
+        private bool TakeProduct(CustomerInfo customer)
         {
-            Logger.Console.Info($"Inviting  {CustomerQueue.First().Nickname}");
-            ClientManager.Instance.ChatCommand($"/invite {CustomerQueue.First().Nickname}");
+            ClientManager.Instance.ActivateTab("trade_tab");
+
+            // Get item position
+            int clientResolution = Convert.ToInt32(ClientManager.Instance.ResolutionEnum.GetDescription());
+            Position itemPosition = StashPositions.StashPositionData[clientResolution][customer.Left, customer.Top];
+            ItemInfoParser itemInfo = ClientManager.Instance.GetItemInfo(itemPosition);
+
+            // Verify Item Data
+            if (string.IsNullOrWhiteSpace(itemInfo.Item.Name) || // Did we find an item in that slot?
+                itemInfo.Item.Name == "Not For Sell" || // Is the Item Listed?
+                !customer.Product.Contains(itemInfo.Item.Name) || // Is this the item the customer wants?
+                itemInfo.Item.Price.Cost > customer.Cost || // Did he offer the asking price?
+                itemInfo.Item.Price.CurrencyType.Name == customer.CurrencyType.Name) // And in the right currency?
+                return false;
+
+            // Everything is good at this point. Move the item to Inventory
+            return ClientManager.Instance.GetItemFromStash(itemPosition, customer.Stash_Tab);
         }
 
-        private bool TakeProduct()
+        private bool OpenTradeWindow(CustomerInfo customer)
         {
-            Bitmap screen_shot = null;
-            Position found_pos = null;
-
-            Logger.Console.Debug("Search trade tab...");
-
-            ClientManager.Instance.ActivateTab("trade_tab")
-
-            for (int count_try = 0; count_try < 16; count_try++)
-            {
-                screen_shot = ScreenCapture.CaptureRectangle(10, 90, 450, 30);
-
-                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("notactive_trade_tab"));
-
-                if (found_pos.IsVisible)
-                    break;
-                else
-                {
-                    found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("active_trade_tab"));
-                    if (found_pos.IsVisible)
-                    {
-                        break;
-                    }
-                }
-
-                screen_shot.Dispose();
-
-                Thread.Sleep(500);
-            }
-
-            screen_shot.Dispose();
-
-            if (found_pos.IsVisible)
-            {
-
-                Win32.MoveTo(10 + found_pos.Left + found_pos.Width / 2, 90 + found_pos.Top + found_pos.Height / 2);
-
-                Thread.Sleep(100);
-
-                Win32.DoMouseClick();
-
-
-
-
-                Thread.Sleep(300);
-
-                Win32.MoveTo(Left_Stash64 + 38 * (CustomerQueue.First().Left - 1), Top_Stash64 + 38 * (CustomerQueue.First().Top - 1));
-
-                Thread.Sleep(1000);
-
-                string ctrlc = CtrlC_PoE();
-
-                string product_clip = GetNameItem_PoE(ctrlc);
-
-                if (product_clip == null || !CustomerQueue.First().Product.Contains(product_clip))
-                {
-                    Logger.Console.Info("not found item");
-
-                    ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} I sold it, sry");
-
-                    ClientManager.Instance.SendKey("{ESC}");
-
-                    return false;
-                }
-
-                if (!IsValidPrice(ctrlc))
-                {
-                    Logger.Console.Info("Fake price");
-
-                    ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} It is not my price!");
-
-                    ClientManager.Instance.SendKey("{ESC}");
-
-                    return false;
-                }
-
-                Win32.CtrlMouseClick();
-
-                Thread.Sleep(100);
-
-                Win32.MoveTo(750, 350);
-
-                ClientManager.Instance.SendKey("{ESC}");
-
-                return true;
-
-            }
-
-            Logger.Console.Warn("Trade tab is not found");
-
-            return false;
-        }
-
-        private bool CheckArea(CustomerInfo customer, int secondsToWait = 30)
-        {
-            Logger.Console.Debug("Check area...");
-            int halfSeconds = secondsToWait * 2;
-            for (int i = 0; i < halfSeconds; i++)
-            {
-                if (customer.IsInArea)
-                    return true;
-                Thread.Sleep(500);
-            }
-            Logger.Console.Warn("Player not here");
-            return false;
-        }
-
-        private bool TradeQuery()
-        {
-            Position found_pos = null;
-
-            Bitmap screen_shot = null;
-
             bool amIdoRequest = false;
-
             for (int try_count = 0; try_count < 3; try_count++)
             {
                 Logger.Console.Debug("Try to accept or do trade...");
@@ -327,72 +182,36 @@ namespace PoE_Trade_Bot
                 {
                     if (!amIdoRequest)
                     {
-                        screen_shot = ScreenCapture.CaptureRectangle(1030, 260, 330, 500);
 
-                        found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("accespt"));
-
-                        if (found_pos.IsVisible)
+                        Position acceptTradeRequestButton = ClientManager.Instance.GetAbsoluteAssetPosition("accespt");
+                        if (acceptTradeRequestButton.IsVisible)
                         {
-                            Logger.Console.Debug("I will Accept trade request!");
-
-                            Win32.MoveTo(1030 + found_pos.Left + found_pos.Width / 2, 260 + found_pos.Top + found_pos.Height / 2);
-
-                            Thread.Sleep(100);
-
-                            Win32.DoMouseClick();
-
-                            Thread.Sleep(100);
-
-                            Win32.MoveTo((1030 + screen_shot.Width) / 2, (260 + screen_shot.Height) / 2);
-
+                            Logger.Console.Debug("Customer Opened Trade Request - Accepting");
+                            ClientManager.Instance.ClickPosition(acceptTradeRequestButton);
                             amIdoRequest = true;
                         }
                         else
                         {
-                            Logger.Console.Debug("i write trade");
-                            string trade_command = "/tradewith " + CustomerQueue.First().Nickname;
-
-                            ClientManager.Instance.ChatCommand(trade_command);
-
-                            screen_shot = ScreenCapture.CaptureRectangle(455, 285, 475, 210);
-
-                            if (!CustomerQueue.First().IsInArea)
+                            Logger.Console.Debug("Sending Trade Request to Customer");
+                            ClientManager.Instance.ChatCommand($"/tradewith {customer.Nickname}");
+                            if (!customer.IsInArea) // Customer Left Area??
                                 return false;
 
-                            found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_waiting"));
-                            if (found_pos.IsVisible)
-                            {
-                                Win32.MoveTo(455 + found_pos.Left + found_pos.Width / 2, 285 + found_pos.Top + found_pos.Height / 2);
-
-                                screen_shot.Dispose();
-
+                            if (ClientManager.Instance.GetAbsoluteAssetPosition("trade_waiting").IsVisible)
                                 amIdoRequest = true;
-                            }
                             else
                             {
                                 Logger.Console.Debug("Check trade window");
-                                screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
-                                found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_window_title"));
-                                if (found_pos.IsVisible)
-                                {
-                                    Logger.Console.Debug("I am in trade!");
-                                    screen_shot.Dispose();
+                                if (ClientManager.Instance.GetAbsoluteAssetPosition("trade_window_title").IsVisible)
                                     return true;
-                                }
                             }
                         }
                     }
                     else
                     {
                         Logger.Console.Debug("Check trade window");
-                        screen_shot = ScreenCapture.CaptureRectangle(330, 15, 235, 130);
-                        found_pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("trade_window_title"));
-                        if (found_pos.IsVisible)
-                        {
-                            screen_shot.Dispose();
-                            Logger.Console.Debug("I am in trade!");
+                        if (ClientManager.Instance.GetAbsoluteAssetPosition("trade_window_title").IsVisible)
                             return true;
-                        }
                     }
                     Thread.Sleep(500);
                 }
@@ -401,113 +220,35 @@ namespace PoE_Trade_Bot
             return false;
         }
 
-        private bool GetProduct()
+        private bool GetProduct(CustomerInfo customer)
         {
-            int x_inventory = 925;
-            int y_inventory = 440;
-            int offset = 37;
-
-            Bitmap screen_shot;
-
-            for (int j = 0; j < 12; j++)
+            bool itemsMoved = false;
+            foreach (Position invData in InventoryPositions.GetInvenoryPositions(ClientManager.Instance.ResolutionEnum))
             {
-                for (int i = 0; i < 5; i++)
-                {
-                    Win32.MoveTo(x_inventory + offset * j, y_inventory + 175);
-
-                    Thread.Sleep(100);
-
-                    screen_shot = ScreenCapture.CaptureRectangle(x_inventory - 30 + offset * j, y_inventory - 30 + offset * i, 60, 60);
-
-                    Position pos = OpenCV_Service.FindObject(screen_shot, StaticUtils.GetUIFragmentPath("empty_cel"), 0.4);
-
-                    if (!pos.IsVisible)
-                    {
-                        Clipboard.Clear();
-
-                        string ss = null;
-
-                        Thread.Sleep(100);
-
-                        Win32.MoveTo(x_inventory + offset * j, y_inventory + offset * i);
-
-                        var time = DateTime.Now + new TimeSpan(0, 0, 5);
-
-                        while (ss == null)
-                        {
-                            ClientManager.Instance.SendKey("^c");
-                            ss = Win32.GetText();
-
-                            if (time < DateTime.Now)
-                                ss = "empty_string";
-                        }
-
-                        if (ss == "empty_string")
-                            continue;
-
-                        if (CustomerQueue.First().Product.Contains(GetNameItem_PoE(ss)))
-                        {
-                            Logger.Console.Debug($"{ss} is found in inventory");
-
-                            Win32.CtrlMouseClick();
-
-                            screen_shot.Dispose();
-
-                            return true;
-                        }
-
-                    }
-                    screen_shot.Dispose();
-                }
+                ItemInfoParser itemInfo = ClientManager.Instance.GetItemInfo(invData);
+                if (!customer.Product.Contains(itemInfo.Item.Name)) continue;
+                 
+                ClientManager.Instance.CtrlClickPosition(ClientManager.Instance.TranslatePosition(invData));
+                itemsMoved = true;
             }
-            ClientManager.Instance.SendKey("{ESC}");
-
-            ClientManager.Instance.ChatCommand("@" + CustomerQueue.First().Nickname + " i sold it, sry");
-
-            return false;
+            return itemsMoved;
         }
 
-        private bool CheckCurrency()
+        private bool CheckCurrency(CustomerInfo customer)
         {
-            List<Position> found_positions = null;
+            double chaosValueInTrade = 0.0;
+            // Count Currency in trade window
 
-            List<Currency_ExRate> main_currs = new List<Currency_ExRate>();
 
-            //set main currencies
-
-            main_currs.Add(CustomerQueue.First().Currency);
-
-            if (CustomerQueue.First().Currency.Name != "chaos orb")
-            {
-                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("chaos"));
-            }
-
-            if (CustomerQueue.First().Currency.Name != "divine orb")
-            {
-                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("divine"));
-            }
-
-            if (CustomerQueue.First().Currency.Name != "exalted orb")
-            {
-                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
-            }
-
-            if (CustomerQueue.First().Currency.Name != "orb of alchemy")
-            {
-                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("alchemy"));
-            }
-
-            if (CustomerQueue.First().Currency.Name == "exalted orb")
-            {
-                ClientManager.Instance.ChatCommand($"@{CustomerQueue.First().Nickname} exalted orb = {PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted").ChaosEquivalent}");
-
-                main_currs.Add(PoECurrencyManager.Instance.Currencies.GetCurrencyByName("exalted"));
-            }
 
             Bitmap screen_shot = null;
 
             int x_trade = 220;
             int y_trade = 140;
+
+
+
+
 
             for (int i = 0; i < 30; i++)
             {
@@ -549,7 +290,7 @@ namespace PoE_Trade_Bot
                         break;
                 }
 
-                Logger.Console.Info("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + CustomerQueue.First().Chaos_Price);
+                Logger.Console.Info("Bid price (in chaos) = " + price + " Necessary (in chaos) = " + customer.Chaos_Price);
 
                 if (price >= CustomerQueue.First().Chaos_Price)
                 {
@@ -614,7 +355,7 @@ namespace PoE_Trade_Bot
             var min_price = new Price
             {
                 Cost = customer.Cost,
-                CurrencyType = customer.Currency,
+                CurrencyType = customer.CurrencyType,
                 ForNumberItems = customer.NumberProducts
             };
 
@@ -887,54 +628,6 @@ namespace PoE_Trade_Bot
 
             }
             return null;
-        }
-
-        private bool IsValidPrice(string ctrlC_PoE)
-        {
-            bool isvalidprice = false;
-            bool isvalidcurrency = false;
-
-            if (!String.IsNullOrEmpty(ctrlC_PoE) && ctrlC_PoE != "empty_string")
-            {
-                var lines = ctrlC_PoE.Split('\n');
-
-                foreach (string str in lines)
-                {
-                    if (str.Contains("Note: ~price"))
-                    {
-                        var result = Regex.Replace(str, "[^0-9.]", "");
-
-                        double price = Convert.ToDouble(result);
-
-                        if (price <= CustomerQueue.First().Cost)
-                            isvalidprice = true;
-
-                        int length = str.Length - 1;
-                        int begin = 0;
-
-                        for (int i = length; i > 0; i--)
-                        {
-                            if (str[i] == ' ')
-                            {
-                                begin = i + 1;
-                                break;
-                            }
-                        }
-
-                        result = str.Substring(begin, str.Length - begin).Replace("\r", "");
-
-                        if (PoECurrencyManager.Instance.Currencies.GetCurrencyByName(result).Name == CustomerQueue.First().Currency.Name)
-                        {
-                            isvalidcurrency = true;
-                        }
-
-
-                        if (isvalidcurrency && isvalidprice)
-                            return true;
-                    }
-                }
-            }
-            return false;
         }
 
         private double GetSizeInStack(string ctrlC_PoE)

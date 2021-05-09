@@ -27,7 +27,7 @@ namespace PoE_Trade_Bot.Models
 
         public double Cost { get; set; }
 
-        public Currency_ExRate Currency { get; set; }
+        public Currency_ExRate CurrencyType { get; set; }
 
         public string Stash_Tab { get; set; }
 
@@ -41,7 +41,7 @@ namespace PoE_Trade_Bot.Models
             {
                 if (OrderType == OrderTypes.ITEM)
                 {
-                    if (Nickname != null && Product != null && Cost > 0 && Stash_Tab != null && Currency != null)
+                    if (Nickname != null && Product != null && Cost > 0 && Stash_Tab != null && CurrencyType != null)
                     {
                         return true;
                     }
@@ -50,7 +50,7 @@ namespace PoE_Trade_Bot.Models
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(Nickname) && !String.IsNullOrEmpty(Product) && Cost > 0 && NumberProducts >= 0 && Currency != null)
+                    if (!string.IsNullOrEmpty(Nickname) && !String.IsNullOrEmpty(Product) && Cost > 0 && NumberProducts >= 0 && CurrencyType != null)
                     {
                         return true;
                     }
@@ -79,7 +79,7 @@ namespace PoE_Trade_Bot.Models
                 $"Order Typer: <{OrderType}> \n" +
                 $"Prodcut: <{Product}> \n" +
                 $"Price: <{Cost}> \n" +
-                $"Currency: <{Currency.Name}> \n" +
+                $"Currency: <{CurrencyType.Name}> \n" +
                 $"Stash Tab: <{Stash_Tab}> \n" +
                 $"Left: <{Left}> \n" +
                 $"Top: <{Top}>\n";
@@ -91,7 +91,7 @@ namespace PoE_Trade_Bot.Models
                 $"Prodcut: <{Product}> \n" +
                 $"Number Products: <{NumberProducts}> \n" +
                 $"Cost: <{Cost}> \n" +
-                $"Currency: <{Currency.Name}> \n" +
+                $"Currency: <{CurrencyType.Name}> \n" +
                 $"Left: <{Left}> \n" +
                 $"Top: <{Top}>\n";
             }

@@ -125,7 +125,7 @@ namespace PoE_Trade_Bot.PoEClient
                         }
                     }
                     length = logLine.IndexOf(" in") - begin;
-                    cus_inf.Currency = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(logLine.Substring(begin, length));
+                    cus_inf.CurrencyType = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(logLine.Substring(begin, length));
 
                     //Price
                     begin = logLine.IndexOf("for ") + 4;
@@ -145,7 +145,7 @@ namespace PoE_Trade_Bot.PoEClient
                     cus_inf.Top = (int)GetNumber(begin, logLine);
 
                     //to chaos chaosequivalent
-                    cus_inf.Chaos_Price = cus_inf.Currency.ChaosEquivalent * cus_inf.Cost;
+                    cus_inf.Chaos_Price = cus_inf.CurrencyType.ChaosEquivalent * cus_inf.Cost;
 
                     //trade accepted
                     cus_inf.TradeStatus = CustomerInfo.TradeStatuses.STARTED;
@@ -173,7 +173,7 @@ namespace PoE_Trade_Bot.PoEClient
 
                     cus.Cost = Convert.ToDouble(Regex.Replace(logLine, @"([\s\w\W]+for my )|([\D])", "").Replace(".", ","));
 
-                    cus.Currency = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(Regex.Replace(logLine, @"([\w\s\W]+my +[\d,.]* )|( in +[\w\W\s]*)", ""));
+                    cus.CurrencyType = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(Regex.Replace(logLine, @"([\w\s\W]+my +[\d,.]* )|( in +[\w\W\s]*)", ""));
 
                     if (cus.IsReady)
                     {

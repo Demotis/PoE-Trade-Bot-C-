@@ -9,7 +9,17 @@ namespace PoE_Trade_Bot.Utilities
         public string RawInfo { get; private set; }
         public Item Item { get; private set; }
 
+        public ItemInfoParser()
+        {
+            ProcessRawInfo("empty_string");
+        }
+
         public ItemInfoParser(string rawInfo)
+        {
+            ProcessRawInfo(rawInfo);
+        }
+
+        private void ProcessRawInfo(string rawInfo)
         {
             RawInfo = rawInfo;
             Item = new Item();
@@ -22,7 +32,6 @@ namespace PoE_Trade_Bot.Utilities
 
             if (Item.StackSize != 1)
                 Item.SizeInStack = (int)GetSizeInStack();
-
         }
 
         public void AddPlace(int ClickTargetX, int ClickTargetY)
@@ -32,7 +41,7 @@ namespace PoE_Trade_Bot.Utilities
 
         private double GetSizeInStack()
         {
-            if (!String.IsNullOrEmpty(RawInfo) && RawInfo != "empty_string")
+            if (!string.IsNullOrEmpty(RawInfo) && RawInfo != "empty_string")
             {
                 int begin = RawInfo.IndexOf("Stack Size: ") + 12;
                 int length = RawInfo.IndexOf("/") - begin;
