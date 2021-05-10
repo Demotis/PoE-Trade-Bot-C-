@@ -49,7 +49,8 @@ namespace PoE_Trade_Bot.Utilities
                 {
                     // ToDo: Add code here to stop and dispose the timer
                     tTimer.Stop();
-                    tTimer.Enabled = true;
+                    tTimer.Elapsed -= CheckExchangeRates;
+                    tTimer = null;
                     
                     
                 }
