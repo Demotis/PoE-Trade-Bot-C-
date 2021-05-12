@@ -44,7 +44,7 @@ namespace PoETradeBot.PoEClient
             if (!BringToForeground())
                 throw new Exception("Error accessing Path of Exile!");
 
-            // StartAFKService();
+            StartAFKService();
         }
 
         private void StartAFKService()
@@ -216,6 +216,7 @@ namespace PoETradeBot.PoEClient
         {
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
             Win32.DoMouseClick(clickDelay);
+            Thread.Sleep(50);
             Win32.MoveTo(0, 0);
         }
 
