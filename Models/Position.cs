@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PoE_Trade_Bot.Models
+namespace PoETradeBot.Models
 {
     public class Position
     {

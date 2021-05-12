@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 
-namespace PoE_Trade_Bot
+namespace PoETradeBot
 {
     public sealed class ConfigManager : IDisposable
     {

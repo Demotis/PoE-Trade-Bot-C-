@@ -6,7 +6,7 @@
 //
 //    var currencyData = CurrencyData.FromJson(jsonString);
 
-namespace PoE_Trade_Bot.Models
+namespace PoETradeBot.Models
 {
     using System;
     using System.Collections.Generic;
@@ -119,12 +119,12 @@ namespace PoE_Trade_Bot.Models
 
     public partial class CurrenciesJson
     {
-        public static CurrenciesJson FromJson(string json) => JsonConvert.DeserializeObject<CurrenciesJson>(json, PoE_Trade_Bot.Models.Converter.Settings);
+        public static CurrenciesJson FromJson(string json) => JsonConvert.DeserializeObject<CurrenciesJson>(json, PoETradeBot.Models.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this CurrenciesJson self) => JsonConvert.SerializeObject(self, PoE_Trade_Bot.Models.Converter.Settings);
+        public static string ToJson(this CurrenciesJson self) => JsonConvert.SerializeObject(self, PoETradeBot.Models.Converter.Settings);
     }
 
     internal static class Converter

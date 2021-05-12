@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
-namespace PoE_Trade_Bot.Services
+namespace PoETradeBot.Services
 {
     /// <summary>
     /// Provides functions to capture the entire screen, or a particular window, and save it to a file.

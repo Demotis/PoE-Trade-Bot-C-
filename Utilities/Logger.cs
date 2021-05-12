@@ -1,6 +1,6 @@
 ﻿using log4net;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class Logger
     {

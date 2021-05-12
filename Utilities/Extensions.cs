@@ -5,7 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class Extensions
     {

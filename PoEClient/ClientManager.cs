@@ -1,8 +1,8 @@
-﻿using PoE_Trade_Bot.Enums;
-using PoE_Trade_Bot.Models;
-using PoE_Trade_Bot.Models.Test;
-using PoE_Trade_Bot.Services;
-using PoE_Trade_Bot.Utilities;
+﻿using PoETradeBot.Enums;
+using PoETradeBot.Models;
+using PoETradeBot.Models.Test;
+using PoETradeBot.Services;
+using PoETradeBot.Utilities;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace PoE_Trade_Bot.PoEClient
+namespace PoETradeBot.PoEClient
 {
     public sealed class ClientManager : IDisposable
     {
@@ -44,7 +44,7 @@ namespace PoE_Trade_Bot.PoEClient
             if (!BringToForeground())
                 throw new Exception("Error accessing Path of Exile!");
 
-            StartAFKService();
+            // StartAFKService();
         }
 
         private void StartAFKService()
@@ -176,29 +176,53 @@ namespace PoE_Trade_Bot.PoEClient
                 return false;
 
             Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("open_stash"), 0.90);
-            if (absolutePosition != null)
+            if (absolutePosition.IsVisible)
                 return true;
             absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
-            if (absolutePosition != null)
-                ClickPosition(absolutePosition);
+            // Shift the position to the bottom of the tag
+            absolutePosition.Top += absolutePosition.Height;
+            if (absolutePosition.IsVisible)
+                ClickPosition(absolutePosition, 100);
 
             // Give it a little time incase it's loading the screen
             Thread.Sleep(1000);
             return OpenStash(++testCycle);
         }
 
-        public void CtrlClickPosition(Position absolutePosition)
+        public void GetPartialStackToCusor(Position absolutePosition, int amount)
         {
-            Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
-            Win32.CtrlMouseClick();
-            Thread.Sleep(100);
+            ShiftClickPosition(absolutePosition);
+            foreach (char character in amount.ToString())
+                SendKey(character.ToString());
+            SendKeys.SendWait("{ENTER}");
         }
 
-        public void ClickPosition(Position absolutePosition)
+        public void ShiftClickPosition(Position absolutePosition)
         {
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
-            Win32.DoMouseClick();
-            Thread.Sleep(100);
+            Win32.ShiftClick();
+            Win32.MoveTo(0, 0);
+        }
+
+
+        public void CtrlClickPosition(Position absolutePosition, int clickDelay = 100)
+        {
+            Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            Win32.CtrlMouseClick(clickDelay);
+            Win32.MoveTo(0, 0);
+        }
+
+        public void ClickPosition(Position absolutePosition, int clickDelay = 100)
+        {
+            Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            Win32.DoMouseClick(clickDelay);
+            Win32.MoveTo(0, 0);
+        }
+
+        public void HoverPosition(Position absolutePosition)
+        {
+            Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            Win32.MoveTo(0, 0);
         }
 
         public Position GetAbsoluteAssetPosition(string assetPath, double threshold = 0.95)
@@ -208,7 +232,7 @@ namespace PoE_Trade_Bot.PoEClient
                 foundPosition = OpenCV_Service.FindObject(search, assetPath, threshold);
 
             if (!foundPosition.IsVisible)
-                return null;
+                return foundPosition;
             return TranslatePosition(foundPosition);
         }
 
@@ -225,10 +249,10 @@ namespace PoE_Trade_Bot.PoEClient
 
             if (!BringToForeground())
                 return false;
-            Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"active_{tabName}"));
-            if (absolutePosition == null) // Active Tab not found, let's look for inactive tab
+            Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"active_{tabName}"), 0.90);
+            if (!absolutePosition.IsVisible) // Active Tab not found, let's look for inactive tab
                 absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath($"notactive_{tabName}"));
-            if (absolutePosition == null) // Nothing was found, Let's cycle incase we are still loading
+            if (!absolutePosition.IsVisible) // Nothing was found, Let's cycle incase we are still loading
             {
                 Thread.Sleep(1000); // Give it a second to finish what it's doing
                 return ActivateTab(tabName, ++testCycle);
@@ -257,17 +281,25 @@ namespace PoE_Trade_Bot.PoEClient
 
             // Now move everything from Inventory to Stash
             // We do not care what the item is at this point just CTRL+Click every block
-            foreach (Position invData in InventoryPositions.GetInvenoryPositions(ResolutionEnum))
-            {
-                CtrlClickPosition(TranslatePosition(invData));
-            }
+            // The speed is very fast, cycle twice just to make sure everything is moved.
+            DumpInventory();
             Logger.Console.Debug("Clearing Inventory Complete.");
             return true;
         }
 
-        public ItemInfoParser GetItemInfo(Position relativePosition)
+        public bool DumpInventory()
         {
-            Position absolutePosition = TranslatePosition(relativePosition);
+            for (int i = 0; i < 2; i++)
+                foreach (Position invData in InventoryPositions.GetInvenoryPositions(ResolutionEnum))
+                    CtrlClickPosition(TranslatePosition(invData), 10);
+            return true;
+        }
+
+        public ItemInfoParser GetItemInfo(Position position, bool isRelativePosition = true)
+        {
+            Position absolutePosition = position.Clone();
+            if (isRelativePosition)
+                absolutePosition = TranslatePosition(position);
             if (!BringToForeground())
                 return new ItemInfoParser();
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
@@ -276,6 +308,7 @@ namespace PoE_Trade_Bot.PoEClient
             SendKey("^c");
             Thread.Sleep(100);
             string ss = Win32.GetText();
+            Win32.MoveTo(0, 0);
             if (string.IsNullOrWhiteSpace(ss))
                 return new ItemInfoParser();
             return new ItemInfoParser(ss);

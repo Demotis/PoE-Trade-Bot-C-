@@ -1,5 +1,5 @@
-﻿using PoE_Trade_Bot.Models;
-using PoE_Trade_Bot.PoEClient;
+﻿using PoETradeBot.Models;
+using PoETradeBot.PoEClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class BotEngineUtils
     {

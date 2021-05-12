@@ -1,11 +1,11 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
-using PoE_Trade_Bot.Models;
+using PoETradeBot.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace PoE_Trade_Bot.Services
+namespace PoETradeBot.Services
 {
     class OpenCV_Service
     {

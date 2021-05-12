@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace PoE_Trade_Bot.Models.Test
+namespace PoETradeBot.Models.Test
 {
     public class Item
     {
@@ -12,7 +8,11 @@ namespace PoE_Trade_Bot.Models.Test
 
         public string Name { get; set; }
 
+        public string RealName { get; set; }
+
         public Price Price { get; set; }
+
+        public double ChaosValue { get; set; }
 
         public int SizeInStack { get; set; } = 0;
 
@@ -22,19 +22,6 @@ namespace PoE_Trade_Bot.Models.Test
         {
             Places = new List<Cell>();
         }
-    }
-
-    public class Cell
-    {
-        public Cell(int left, int top)
-        {
-            Left = left;
-            Top = top;
-        }
-
-        public int Left { get; set; }
-
-        public int Top { get; set; }
     }
 
     public class Price

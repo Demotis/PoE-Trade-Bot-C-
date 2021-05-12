@@ -1,17 +1,14 @@
 ﻿using Newtonsoft.Json;
-using PoE_Trade_Bot.Utilities;
+using PoETradeBot.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace PoE_Trade_Bot.Models
+namespace PoETradeBot.Models
 {
     public class Currencies
     {
-        private DateTime LastUpdate;
-
         private HttpClient Client;
-
         private List<Currency_ExRate> CurrenciesList;
 
         public Currencies()
@@ -22,6 +19,8 @@ namespace PoE_Trade_Bot.Models
 
         public Currency_ExRate GetCurrencyByName(string name)
         {
+            name = name.Trim();
+
             if (string.IsNullOrEmpty(name))
             {
                 return null;
@@ -87,6 +86,9 @@ namespace PoE_Trade_Bot.Models
                     name = "cartographerschisel";
                     break;
             }
+
+            // Normalize Name
+            name = name.Replace(" ", "").Replace("'", "");
 
             Currency_ExRate returnRate = CurrenciesList.Find((Currency_ExRate c) => c.NormalName.Equals(name.ToLower()));
 

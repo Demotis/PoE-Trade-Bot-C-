@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace PoE_Trade_Bot.Models
+namespace PoETradeBot.Models
 {
     public class CustomerInfo
     {
@@ -16,7 +12,16 @@ namespace PoE_Trade_Bot.Models
         public enum OrderTypes
         {
             ITEM,
-            CURRENCY
+            CURRENCY,
+            API
+        }
+
+        public enum ApiActions
+        {
+            NONE,
+            GET,
+            TAKE,
+            PUT
         }
 
         public string Nickname { get; set; }
@@ -29,7 +34,9 @@ namespace PoE_Trade_Bot.Models
 
         public Currency_ExRate CurrencyType { get; set; }
 
-        public string Stash_Tab { get; set; }
+        public string StashTab { get; set; }
+
+        public string StashTabNormal => $"{StashTab.Replace(" ", "")}_tab";
 
         public int Left { get; set; }
 
@@ -41,7 +48,7 @@ namespace PoE_Trade_Bot.Models
             {
                 if (OrderType == OrderTypes.ITEM)
                 {
-                    if (Nickname != null && Product != null && Cost > 0 && Stash_Tab != null && CurrencyType != null)
+                    if (Nickname != null && Product != null && Cost > 0 && StashTab != null && CurrencyType != null)
                     {
                         return true;
                     }
@@ -57,7 +64,7 @@ namespace PoE_Trade_Bot.Models
                     else
                         return false;
                 }
-                
+
             }
         }
 
@@ -71,6 +78,8 @@ namespace PoE_Trade_Bot.Models
 
         public OrderTypes OrderType { get; set; }
 
+        public ApiActions ApiAction { get; set; }
+
         public override string ToString()
         {
             if (OrderType == OrderTypes.ITEM)
@@ -80,7 +89,7 @@ namespace PoE_Trade_Bot.Models
                 $"Prodcut: <{Product}> \n" +
                 $"Price: <{Cost}> \n" +
                 $"Currency: <{CurrencyType.Name}> \n" +
-                $"Stash Tab: <{Stash_Tab}> \n" +
+                $"Stash Tab: <{StashTab}> \n" +
                 $"Left: <{Left}> \n" +
                 $"Top: <{Top}>\n";
             }

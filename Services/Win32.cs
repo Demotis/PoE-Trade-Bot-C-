@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-namespace PoE_Trade_Bot.Services
+namespace PoETradeBot.Services
 {
     public class Win32
     {
@@ -43,12 +43,12 @@ namespace PoE_Trade_Bot.Services
             public int y;
         }
 
-        public static void DoMouseClick()
+        public static void DoMouseClick(int clickDelay = 100)
         {
             mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
-            Thread.Sleep(50);
+            Thread.Sleep(clickDelay);
             mouse_event(MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
-            Thread.Sleep(100);
+            Thread.Sleep(10);
         }
 
         public static void ShiftClick()
@@ -63,7 +63,7 @@ namespace PoE_Trade_Bot.Services
             X = Convert.ToUInt32(x);
             Y = Convert.ToUInt32(y);
             SetCursorPos(x, y);
-            Thread.Sleep(50);
+            Thread.Sleep(10);
         }
 
         [DllImport("user32.dll")]
@@ -112,10 +112,10 @@ namespace PoE_Trade_Bot.Services
             keybd_event(VK_CONTROL, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
         }
 
-        public static void CtrlMouseClick()
+        public static void CtrlMouseClick(int clickDelay = 100)
         {
             DownCtrl();
-            DoMouseClick();
+            DoMouseClick(clickDelay);
             UpCtrl();
         }
 

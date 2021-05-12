@@ -1,6 +1,6 @@
-﻿using PoE_Trade_Bot.Enums;
+﻿using PoETradeBot.Enums;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class StaticUtils
     {

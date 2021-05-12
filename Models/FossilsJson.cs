@@ -6,7 +6,7 @@
 //
 //    var fossilsJson = FossilsJson.FromJson(jsonString);
 
-namespace PoE_Trade_Bot.Models.Fossils
+namespace PoETradeBot.Models.Fossils
 {
     using System;
     using System.Collections.Generic;
@@ -121,12 +121,12 @@ namespace PoE_Trade_Bot.Models.Fossils
 
     public partial class FossilsJson
     {
-        public static FossilsJson FromJson(string json) => JsonConvert.DeserializeObject<FossilsJson>(json, PoE_Trade_Bot.Models.Converter.Settings);
+        public static FossilsJson FromJson(string json) => JsonConvert.DeserializeObject<FossilsJson>(json, PoETradeBot.Models.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this FossilsJson self) => JsonConvert.SerializeObject(self, PoE_Trade_Bot.Models.Converter.Settings);
+        public static string ToJson(this FossilsJson self) => JsonConvert.SerializeObject(self, PoETradeBot.Models.Converter.Settings);
     }
 
     internal static class Converter

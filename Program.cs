@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PoE_Trade_Bot
+namespace PoETradeBot
 {
 
     class Program
@@ -10,8 +10,8 @@ namespace PoE_Trade_Bot
         {
             log4net.Config.XmlConfigurator.Configure();
 
-            var Bot_Engine = new BotEngine();
-            Bot_Engine.StartBot();
+            var BotEngine = new BotEngine();
+            BotEngine.StartBot();
 
         }
     }

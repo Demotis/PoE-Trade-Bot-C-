@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PoE_Trade_Bot.Models.Test
+namespace PoETradeBot.Models.Test
 {
     public class Tab
     {

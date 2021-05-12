@@ -6,7 +6,7 @@
 //
 //    var mapsJson = MapsJson.FromJson(jsonString);
 
-namespace PoE_Trade_Bot.Models.Maps
+namespace PoETradeBot.Models.Maps
 {
     using System;
     using System.Collections.Generic;
@@ -114,12 +114,12 @@ namespace PoE_Trade_Bot.Models.Maps
 
     public partial class MapsJson
     {
-        public static MapsJson FromJson(string json) => JsonConvert.DeserializeObject<MapsJson>(json, PoE_Trade_Bot.Models.Maps.Converter.Settings);
+        public static MapsJson FromJson(string json) => JsonConvert.DeserializeObject<MapsJson>(json, PoETradeBot.Models.Maps.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this MapsJson self) => JsonConvert.SerializeObject(self, PoE_Trade_Bot.Models.Maps.Converter.Settings);
+        public static string ToJson(this MapsJson self) => JsonConvert.SerializeObject(self, PoETradeBot.Models.Maps.Converter.Settings);
     }
 
     internal static class Converter

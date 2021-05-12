@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{CCE60936-F6E3-4812-84D5-ACDDE1703569}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>PoE_Trade_Bot</RootNamespace>
-    <AssemblyName>PoE-Trade-Bot</AssemblyName>
+    <RootNamespace>PoETradeBot</RootNamespace>
+    <AssemblyName>PoETradeBot</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -51,7 +51,7 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>PoE_Trade_Bot.Program</StartupObject>
+    <StartupObject>PoETradeBot.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
@@ -97,6 +97,7 @@
     <Compile Include="Enums\ChatCommand.cs" />
     <Compile Include="Enums\Currency.cs" />
     <Compile Include="Enums\Resolution.cs" />
+    <Compile Include="Models\Test\Cell.cs" />
     <Compile Include="PoEClient\ClientManager.cs" />
     <Compile Include="PoEClient\LogManager.cs" />
     <Compile Include="Utilities\BotEngineUtils.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Win32.cs" />
+    <Compile Include="Utilities\CurrencyTabPositions.cs" />
     <Compile Include="Utilities\Extensions.cs" />
     <Compile Include="Utilities\TradePositions.cs" />
     <Compile Include="Utilities\InventoryPositions.cs" />
@@ -131,6 +133,45 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\4.jpg" />
+    <Content Include="Assets\Currencies\800600\BlessedOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\ChaosOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\ChromaticOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\ExaltedOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\JewellersOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfAlchemy.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfAlteration.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfChance.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfFusing.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfScouring.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\OrbOfTransmutation.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\RegalOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Currencies\800600\VaalOrb.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Currencies\chaosorb.png" />
     <Content Include="Assets\Currencies\divineorb.png" />
     <Content Include="Assets\Currencies\exaltedorb.png" />

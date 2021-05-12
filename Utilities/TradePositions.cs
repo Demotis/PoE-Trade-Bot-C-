@@ -1,9 +1,9 @@
-﻿using PoE_Trade_Bot.Enums;
-using PoE_Trade_Bot.Models;
+﻿using PoETradeBot.Enums;
+using PoETradeBot.Models;
 using System;
 using System.Collections.Generic;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class TradePositions
     {
@@ -36,7 +36,7 @@ namespace PoE_Trade_Bot.Utilities
             return returnList;
         }
 
-        public static List<Position> GetInvenoryPositions(Resolution res)
+        public static List<Position> GetPositions(Resolution res)
         {
             int resolutionKey = (int)res;
             if (!TradePositionData.ContainsKey(resolutionKey))

@@ -6,7 +6,7 @@
 //
 //    var resonatorsJson = ResonatorsJson.FromJson(jsonString);
 
-namespace PoE_Trade_Bot.Models.Resonators
+namespace PoETradeBot.Models.Resonators
 {
     using System;
     using System.Collections.Generic;
@@ -119,12 +119,12 @@ namespace PoE_Trade_Bot.Models.Resonators
 
     public partial class ResonatorsJson
     {
-        public static ResonatorsJson FromJson(string json) => JsonConvert.DeserializeObject<ResonatorsJson>(json, PoE_Trade_Bot.Models.Resonators.Converter.Settings);
+        public static ResonatorsJson FromJson(string json) => JsonConvert.DeserializeObject<ResonatorsJson>(json, PoETradeBot.Models.Resonators.Converter.Settings);
     }
 
     public static class Serialize
     {
-        public static string ToJson(this ResonatorsJson self) => JsonConvert.SerializeObject(self, PoE_Trade_Bot.Models.Resonators.Converter.Settings);
+        public static string ToJson(this ResonatorsJson self) => JsonConvert.SerializeObject(self, PoETradeBot.Models.Resonators.Converter.Settings);
     }
 
     internal static class Converter

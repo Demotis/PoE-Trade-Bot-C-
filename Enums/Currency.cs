@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace PoE_Trade_Bot.Enums
+namespace PoETradeBot.Enums
 {
     public enum Currency
     {

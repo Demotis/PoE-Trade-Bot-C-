@@ -1,7 +1,7 @@
-﻿using PoE_Trade_Bot.Models;
+﻿using PoETradeBot.Models;
 using System;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public sealed class PoECurrencyManager : IDisposable
     {

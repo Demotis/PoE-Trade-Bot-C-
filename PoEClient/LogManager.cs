@@ -1,12 +1,12 @@
 ﻿using Microsoft.Win32;
-using PoE_Trade_Bot.Models;
-using PoE_Trade_Bot.Utilities;
+using PoETradeBot.Models;
+using PoETradeBot.Utilities;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace PoE_Trade_Bot.PoEClient
+namespace PoETradeBot.PoEClient
 {
     public sealed class LogManager : IDisposable
     {
@@ -17,7 +17,6 @@ namespace PoE_Trade_Bot.PoEClient
         private long _lastIndex { get; set; }
         private bool _processingLog { get; set; }
 
-        private string _path;
         private string _logsDir;
         private string _logFile;
 
@@ -85,6 +84,62 @@ namespace PoE_Trade_Bot.PoEClient
             //GetFullInfoCustomer
             try
             {
+                if (logLine.Contains(ConfigManager.Instance.ApplicationConfig["ApiKey"]) && logLine.Contains("@From"))
+                {
+                    // Do we have an action?
+                    if (!logLine.Contains("A:") ||
+                        !logLine.Contains(":A"))
+                        return;
+
+                    var cus_inf = new CustomerInfo();
+
+                    cus_inf.OrderType = CustomerInfo.OrderTypes.API;
+
+                    int length;
+                    int begin;
+
+                    //Nickname
+                    if (!logLine.Contains("> "))
+                    {
+                        begin = logLine.IndexOf("@From ") + 6;
+                        length = logLine.IndexOf(": ") - begin;
+                        cus_inf.Nickname = logLine.Substring(begin, length);
+                    }
+                    else
+                    {
+                        begin = logLine.IndexOf("> ") + 2;
+                        length = logLine.IndexOf(": ") - begin;
+                        cus_inf.Nickname = logLine.Substring(begin, length);
+                    }
+
+                    // Action
+                    begin = logLine.IndexOf("A:") + 2;
+                    length = logLine.IndexOf(":A") - begin;
+                    string action = logLine.Substring(begin, length);
+
+                    switch (action)
+                    {
+                        case "take":
+                            // Do we have an currency?
+                            if (!logLine.Contains("C:") ||
+                                !logLine.Contains(":C"))
+                                return;
+                            cus_inf.ApiAction = CustomerInfo.ApiActions.TAKE;
+                            begin = logLine.IndexOf("C:") + 2;
+                            length = logLine.IndexOf(":C") - begin;
+                            cus_inf.Product = logLine.Substring(begin, length);
+                            break;
+                        case "get":
+                            cus_inf.ApiAction = CustomerInfo.ApiActions.GET;
+                            break;
+                        case "put":
+                            return;
+                            break;
+                    }
+                    BotEngine.CustomerQueue.Add(cus_inf);
+                    return;
+                }
+
                 if (logLine.Contains("Hi, I would like to buy your") && logLine.Contains("@From"))
                 {
                     var cus_inf = new CustomerInfo();
@@ -134,7 +189,7 @@ namespace PoE_Trade_Bot.PoEClient
                     //Stash Tab
                     begin = logLine.IndexOf("tab \"") + 5;
                     length = logLine.IndexOf("\"; position") - begin;
-                    cus_inf.Stash_Tab = logLine.Substring(begin, length);
+                    cus_inf.StashTab = logLine.Substring(begin, length);
 
                     //left
                     begin = logLine.IndexOf("left ") + 5;

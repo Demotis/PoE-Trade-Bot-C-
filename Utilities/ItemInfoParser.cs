@@ -1,8 +1,9 @@
-﻿using PoE_Trade_Bot.Models.Test;
+﻿using PoETradeBot.Models;
+using PoETradeBot.Models.Test;
 using System;
 using System.Text.RegularExpressions;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public class ItemInfoParser
     {
@@ -24,19 +25,29 @@ namespace PoE_Trade_Bot.Utilities
             RawInfo = rawInfo;
             Item = new Item();
             Item.Price = GetPrice();
+            Item.RealName = Item.Name = GetNameItem();
             if (Item.Price.Cost == -1)
                 Item.Name = "Not For Sell";
-            else
-                Item.Name = GetNameItem();
             Item.StackSize = GetStackSize();
 
             if (Item.StackSize != 1)
                 Item.SizeInStack = (int)GetSizeInStack();
+
+            Item.ChaosValue = GetChaosValue();
         }
 
         public void AddPlace(int ClickTargetX, int ClickTargetY)
         {
             Item.Places.Add(new Cell(ClickTargetX, ClickTargetY));
+        }
+
+        private double GetChaosValue()
+        {
+            if (Item.Price.IsSet)
+                return this.Item.Price.CurrencyType.ChaosEquivalent * this.Item.Price.Cost * this.Item.Price.ForNumberItems;
+
+            Currency_ExRate exRate = PoECurrencyManager.Instance.Currencies.GetCurrencyByName(this.Item.RealName);
+            return exRate == null ? 0.0 : exRate.ChaosEquivalent * this.Item.SizeInStack;
         }
 
         private double GetSizeInStack()
@@ -56,8 +67,8 @@ namespace PoE_Trade_Bot.Utilities
         {
             if (RawInfo.Contains("Rarity: Currency"))
             {
-                string str = Regex.Match(RawInfo, @"Rarity: Currency\s([\w ']+)").Groups[1].Value;
-                return str;
+                var lines = RawInfo.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                return lines[2];
             }
 
             if (RawInfo.Contains("Map Tier:"))
@@ -108,7 +119,7 @@ namespace PoE_Trade_Bot.Utilities
             }
 
             // Get Generic Name
-            string[] infoParts = RawInfo.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] infoParts = RawInfo.Split(new[] { "\n", "\r", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             string itemName = string.Empty;
             foreach (string line in infoParts)
             {

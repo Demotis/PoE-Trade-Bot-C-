@@ -1,9 +1,9 @@
-﻿using PoE_Trade_Bot.Enums;
-using PoE_Trade_Bot.Models;
+﻿using PoETradeBot.Enums;
+using PoETradeBot.Models;
 using System;
 using System.Collections.Generic;
 
-namespace PoE_Trade_Bot.Utilities
+namespace PoETradeBot.Utilities
 {
     public static class InventoryPositions
     {
