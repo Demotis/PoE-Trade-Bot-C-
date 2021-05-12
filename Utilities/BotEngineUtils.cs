@@ -1,11 +1,6 @@
 ﻿using PoETradeBot.Models;
 using PoETradeBot.PoEClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace PoETradeBot.Utilities
 {
@@ -17,13 +12,16 @@ namespace PoETradeBot.Utilities
             return CheckAreaForCustomer(customer, secondsToWait);
         }
 
-        public static bool CheckAreaForCustomer(CustomerInfo customer, int secondsToWait = 30)
+        public static bool CheckAreaForCustomer(CustomerInfo customer, int secondsToWait = 40)
         {
             int halfSeconds = secondsToWait * 2;
             for (int i = 0; i < halfSeconds; i++)
             {
                 if (customer.IsInArea)
+                {
+                    Thread.Sleep(1000);
                     return true;
+                }
                 Thread.Sleep(500);
             }
             Logger.Console.Warn("Customer arrival timeout expired");

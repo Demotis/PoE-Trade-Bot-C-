@@ -42,11 +42,12 @@ namespace PoETradeBot
         {
             while (true)
             {
-                if (!CustomerQueue.Any())
+                if (!CustomerQueue.Any() || ClientManager.Instance.IsAFKTick)
                 {
                     Thread.Sleep(500);
                     continue;
                 }
+
 
                 // We have a customer in queue
                 CustomerInfo customer = CustomerQueue.First();
@@ -66,13 +67,12 @@ namespace PoETradeBot
 
                 // Cleanup After Trade - We are going to send the Kick command even if we didn't add customer
                 BotEngineUtils.KickFromParty(customer);
-                CompletedTrades.Add(customer);
-                CustomerQueue.Remove(customer);
-                ClientManager.Instance.SendKey(" ");
                 if (!ClientManager.Instance.ClearInventory())
                     Logger.Console.Error("Stash not found. I cant clean inventory after trade.");
-
+                CompletedTrades.Add(customer);
+                CustomerQueue.Remove(customer);
                 Logger.Console.Info("Trade Complete");
+                ClientManager.Instance.SendKey("{ESC}");
             }
         }
 
@@ -139,6 +139,7 @@ namespace PoETradeBot
                     if (customer.TradeStatus != CustomerInfo.TradeStatuses.STARTED)
                         return false;
                     ClientManager.Instance.HoverPosition(ClientManager.Instance.TranslatePosition(offerSlot));
+                    Thread.Sleep(100);
                 }
                 Position button = ClientManager.Instance.GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("accept_tradewindow"));
                 if (button.IsVisible)
@@ -302,6 +303,7 @@ namespace PoETradeBot
 
         private bool OfferCurrency(CustomerInfo customer)
         {
+            Thread.Sleep(1000);
             int amountOffered = 0;
             foreach (Position invData in InventoryPositions.GetInvenoryPositions(ClientManager.Instance.ResolutionEnum))
             {
@@ -328,6 +330,14 @@ namespace PoETradeBot
             while (ClientManager.Instance.GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("trade_window_title")).IsVisible)
             {
                 customer.TradeStatus = CustomerInfo.TradeStatuses.STARTED;
+                foreach (Position offerSlot in TradePositions.GetPositions(ClientManager.Instance.ResolutionEnum))
+                {
+                    if (customer.TradeStatus != CustomerInfo.TradeStatuses.STARTED)
+                        return false;
+                    ClientManager.Instance.HoverPosition(ClientManager.Instance.TranslatePosition(offerSlot));
+                    Thread.Sleep(100);
+                }
+
                 foreach (Position offerSlot in TradePositions.GetPositions(ClientManager.Instance.ResolutionEnum))
                 {
                     if (customer.TradeStatus != CustomerInfo.TradeStatuses.STARTED)
@@ -361,7 +371,7 @@ namespace PoETradeBot
             {
                 if (customer.TradeStatus == CustomerInfo.TradeStatuses.CANCELED)
                     return false;
-
+                ClientManager.Instance.ClickPosition(button);
                 Thread.Sleep(500);
             }
             return true;

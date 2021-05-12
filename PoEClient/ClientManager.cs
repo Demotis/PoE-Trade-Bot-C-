@@ -20,6 +20,7 @@ namespace PoETradeBot.PoEClient
         public static ClientManager Instance => instance;
 
         public bool IsAFK { get; set; }
+        public bool IsAFKTick { get; set; }
         public Process ActiveProcess { get; private set; }
         public Rectangle WindowRect { get; private set; }
         private System.Timers.Timer _afkTimer { get; set; }
@@ -58,8 +59,11 @@ namespace PoETradeBot.PoEClient
 
         private void AfkTimerTick(object source, System.Timers.ElapsedEventArgs e)
         {
-            if (!BotEngine.CustomerQueue.Any())
-                ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
+            if (BotEngine.CustomerQueue.Any()) return;
+
+            IsAFKTick = true;
+            ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
+            IsAFKTick = false;
         }
 
         public bool ValidateProcess()
@@ -127,6 +131,7 @@ namespace PoETradeBot.PoEClient
             if (!BringToForeground())
                 return false;
             SendKeys.SendWait(key);
+            Thread.Sleep(500);
             return true;
         }
 
@@ -136,11 +141,14 @@ namespace PoETradeBot.PoEClient
             if (!BringToForeground())
                 return false;
             SendKeys.SendWait("{ENTER}");
+            Thread.Sleep(500);
             foreach (char c in command)
             {
                 SendKeys.SendWait(c.ToString());
             }
+            Thread.Sleep(500);
             SendKeys.SendWait("{ENTER}");
+            Thread.Sleep(500);
             return true;
         }
 
@@ -153,6 +161,7 @@ namespace PoETradeBot.PoEClient
             {
                 SendKeys.SendWait(c.ToString());
             }
+            Thread.Sleep(500);
             return true;
         }
 
@@ -179,10 +188,14 @@ namespace PoETradeBot.PoEClient
             if (absolutePosition.IsVisible)
                 return true;
             absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
-            // Shift the position to the bottom of the tag
-            absolutePosition.Top += absolutePosition.Height;
             if (absolutePosition.IsVisible)
+            {
+                // Shift the position to the bottom of the tag
+                absolutePosition.Top += absolutePosition.Height;
+                HoverPosition(absolutePosition);
+                Thread.Sleep(200);
                 ClickPosition(absolutePosition, 100);
+            }
 
             // Give it a little time incase it's loading the screen
             Thread.Sleep(1000);
@@ -208,13 +221,16 @@ namespace PoETradeBot.PoEClient
         public void CtrlClickPosition(Position absolutePosition, int clickDelay = 100)
         {
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            Thread.Sleep(100);
             Win32.CtrlMouseClick(clickDelay);
+            Thread.Sleep(50);
             Win32.MoveTo(0, 0);
         }
 
         public void ClickPosition(Position absolutePosition, int clickDelay = 100)
         {
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
+            Thread.Sleep(100);
             Win32.DoMouseClick(clickDelay);
             Thread.Sleep(50);
             Win32.MoveTo(0, 0);
@@ -223,7 +239,6 @@ namespace PoETradeBot.PoEClient
         public void HoverPosition(Position absolutePosition)
         {
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
-            Win32.MoveTo(0, 0);
         }
 
         public Position GetAbsoluteAssetPosition(string assetPath, double threshold = 0.95)
@@ -246,7 +261,7 @@ namespace PoETradeBot.PoEClient
                 return false;
 
             if (!OpenStash())
-                return false;
+                return ActivateTab(tabName, ++testCycle);
 
             if (!BringToForeground())
                 return false;
@@ -290,9 +305,8 @@ namespace PoETradeBot.PoEClient
 
         public bool DumpInventory()
         {
-            for (int i = 0; i < 2; i++)
-                foreach (Position invData in InventoryPositions.GetInvenoryPositions(ResolutionEnum))
-                    CtrlClickPosition(TranslatePosition(invData), 10);
+            foreach (Position invData in InventoryPositions.GetInvenoryPositions(ResolutionEnum))
+                CtrlClickPosition(TranslatePosition(invData), 50);
             return true;
         }
 
