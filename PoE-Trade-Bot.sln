@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoE-Trade-Bot", "PoE-Trade-Bot.csproj", "{CCE60936-F6E3-4812-84D5-ACDDE1703569}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POETradeBotUI", "..\POETradeBotUI\POETradeBotUI.csproj", "{5DFA054F-76E6-4562-86F3-CA9A5042C884}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TradeBotSharedLib", "..\TradeBotSharedLib\TradeBotSharedLib.csproj", "{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,22 @@ Global
 		{CCE60936-F6E3-4812-84D5-ACDDE1703569}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CCE60936-F6E3-4812-84D5-ACDDE1703569}.Release|x64.ActiveCfg = Release|x64
 		{CCE60936-F6E3-4812-84D5-ACDDE1703569}.Release|x64.Build.0 = Release|x64
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Debug|x64.ActiveCfg = Debug|x64
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Debug|x64.Build.0 = Debug|x64
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Release|x64.ActiveCfg = Release|x64
+		{5DFA054F-76E6-4562-86F3-CA9A5042C884}.Release|x64.Build.0 = Release|x64
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Debug|x64.ActiveCfg = Debug|x64
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Debug|x64.Build.0 = Debug|x64
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Release|x64.ActiveCfg = Release|x64
+		{4B866457-96AF-4DC3-9AC1-A23038DB7BEB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

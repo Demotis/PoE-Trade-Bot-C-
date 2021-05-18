@@ -1,6 +1,6 @@
-﻿using PoETradeBot.Models;
-using PoETradeBot.PoEClient;
-using PoETradeBot.Utilities;
+﻿using TradeBotSharedLib.Models;
+using TradeBotSharedLib.PoEClient;
+using TradeBotSharedLib.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +24,8 @@ namespace PoETradeBot
 
         public void StartBot()
         {
-            ClientManager.Instance.ChatCommand(Enums.ChatCommand.AFK_OFF.GetDescription());
-            ClientManager.Instance.ChatCommand(Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
+            ClientManager.Instance.ChatCommand(TradeBotSharedLib.Enums.ChatCommand.AFK_OFF.GetDescription());
+            ClientManager.Instance.ChatCommand(TradeBotSharedLib.Enums.ChatCommand.GOTO_MY_HIDEOUT.GetDescription());
             PrepareTradeData();
             StartTrader_PoEbota();
             Console.ReadKey();
