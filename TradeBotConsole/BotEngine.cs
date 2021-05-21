@@ -1,22 +1,17 @@
-﻿using TradeBotSharedLib.Models;
-using TradeBotSharedLib.PoEClient;
-using TradeBotSharedLib.Utilities;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading;
+using TradeBotSharedLib;
+using TradeBotSharedLib.Models;
+using TradeBotSharedLib.PoEClient;
+using TradeBotSharedLib.Utilities;
 
 namespace PoETradeBot
 {
     public class BotEngine
     {
-        public static List<CustomerInfo> CustomerQueue;
-        public static List<CustomerInfo> CompletedTrades;
-
         public BotEngine()
         {
-            CustomerQueue = new List<CustomerInfo>();
-            CompletedTrades = new List<CustomerInfo>();
             // Start Currencies Service
             PoECurrencyManager.Instance.StartService();
             LogManager.Instance.StartService();
@@ -42,7 +37,7 @@ namespace PoETradeBot
         {
             while (true)
             {
-                if (!CustomerQueue.Any() || ClientManager.Instance.IsAFKTick)
+                if (!Statics.CustomerQueue.Any() || ClientManager.Instance.IsAFKTick)
                 {
                     Thread.Sleep(500);
                     continue;
@@ -50,7 +45,7 @@ namespace PoETradeBot
 
 
                 // We have a customer in queue
-                CustomerInfo customer = CustomerQueue.First();
+                CustomerInfo customer = Statics.CustomerQueue.First();
 
                 if (customer.OrderType == CustomerInfo.OrderTypes.CURRENCY &&
                     ProcessCurrencySale(customer))
@@ -69,8 +64,8 @@ namespace PoETradeBot
                 BotEngineUtils.KickFromParty(customer);
                 if (!ClientManager.Instance.ClearInventory())
                     Logger.Console.Error("Stash not found. I cant clean inventory after trade.");
-                CompletedTrades.Add(customer);
-                CustomerQueue.Remove(customer);
+                Statics.CompletedTrades.Add(customer);
+                Statics.CustomerQueue.Remove(customer);
                 Logger.Console.Info("Trade Complete");
                 ClientManager.Instance.SendKey("{ESC}");
             }
