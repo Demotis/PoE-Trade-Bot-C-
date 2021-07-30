@@ -1,15 +1,15 @@
-﻿using TradeBotSharedLib.Enums;
-using TradeBotSharedLib.Models;
-using TradeBotSharedLib.Models.Test;
-using TradeBotSharedLib.Services;
-using TradeBotSharedLib.Utilities;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using TradeBotSharedLib.Enums;
+using TradeBotSharedLib.Models;
+using TradeBotSharedLib.Models.Test;
+using TradeBotSharedLib.Services;
+using TradeBotSharedLib.Utilities;
 
 namespace TradeBotSharedLib.PoEClient
 {
@@ -27,6 +27,9 @@ namespace TradeBotSharedLib.PoEClient
 
         public Resolution ResolutionEnum { get; private set; }
 
+        public string ActiveResolutionNormal { get; private set; }
+        public POEUIConfig ActiveConfiguration { get; private set; }
+
         static ClientManager()
         {
         }
@@ -40,12 +43,13 @@ namespace TradeBotSharedLib.PoEClient
             else
                 throw new Exception("Path of Exile is not running!");
 
+            // Static from Config File
             ResolutionEnum = (Resolution)Convert.ToInt32(ConfigManager.Instance.ApplicationConfig["POEResolution"]);
 
             if (!BringToForeground())
                 throw new Exception("Error accessing Path of Exile!");
 
-            StartAFKService();
+            //StartAFKService();
         }
 
         private void StartAFKService()
@@ -103,6 +107,11 @@ namespace TradeBotSharedLib.PoEClient
 
                 // Win32.GetWindowRect(ActiveProcess.MainWindowHandle, out rect);
                 WindowRect = rect;
+
+                string resNormal = $"{rect.Width}x{rect.Height}";
+                ActiveResolutionNormal = resNormal;
+                ActiveConfiguration = ClientConfiguration.ReadFromJsonFile<POEUIConfig>(resNormal);
+
                 return true;
             }
             catch (Exception ex)
@@ -165,6 +174,14 @@ namespace TradeBotSharedLib.PoEClient
             return true;
         }
 
+        public Position GetRelativePosition(Position absolutePosition)
+        {
+            Position returnPosition = absolutePosition.Clone();
+            returnPosition.Left -= WindowRect.Left;
+            returnPosition.Top -= WindowRect.Top;
+            return returnPosition;
+        }
+
         public Position TranslatePosition(Position relativePosition)
         {
             Position returnPosition = relativePosition.Clone();
@@ -184,10 +201,10 @@ namespace TradeBotSharedLib.PoEClient
             if (!BringToForeground())
                 return false;
 
-            Position absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("open_stash"), 0.90);
+            Position absolutePosition = GetAbsoluteAssetPosition(ActiveConfiguration.StashTitle, 0.90);
             if (absolutePosition.IsVisible)
                 return true;
-            absolutePosition = GetAbsoluteAssetPosition(StaticUtils.GetUIFragmentPath("stashtitle"), 0.90);
+            absolutePosition = GetAbsoluteAssetPosition(ActiveConfiguration.StashTag, 0.90);
             if (absolutePosition.IsVisible)
             {
                 // Shift the position to the bottom of the tag
@@ -241,15 +258,27 @@ namespace TradeBotSharedLib.PoEClient
             Win32.MoveTo(absolutePosition.ClickTargetX, absolutePosition.ClickTargetY);
         }
 
-        public Position GetAbsoluteAssetPosition(string assetPath, double threshold = 0.95)
+        public Bitmap GetClientScreenShot()
+        {
+            if (!BringToForeground())
+                return null;
+            return ScreenCapture.CaptureRectangle(WindowRect);
+        }
+
+        public Position GetAbsoluteAssetPosition(Bitmap templateImage, double threshold = 0.95)
         {
             Position foundPosition;
-            using (Bitmap search = ScreenCapture.CaptureRectangle(WindowRect))
-                foundPosition = OpenCV_Service.FindObject(search, assetPath, threshold);
+            using (Bitmap search = GetClientScreenShot())
+                foundPosition = OpenCV_Service.FindObject(search, templateImage, threshold);
 
             if (!foundPosition.IsVisible)
                 return foundPosition;
             return TranslatePosition(foundPosition);
+        }
+
+        public Position GetAbsoluteAssetPosition(string assetPath, double threshold = 0.95)
+        {
+            return GetAbsoluteAssetPosition(new Bitmap(assetPath), threshold);
         }
 
         public bool ActivateTab(string tabName, int testCycle = 1)

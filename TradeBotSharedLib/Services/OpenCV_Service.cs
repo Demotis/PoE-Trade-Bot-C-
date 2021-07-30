@@ -1,9 +1,9 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
-using TradeBotSharedLib.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using TradeBotSharedLib.Models;
 
 namespace TradeBotSharedLib.Services
 {
@@ -14,12 +14,12 @@ namespace TradeBotSharedLib.Services
 
         }
 
-        public static Position FindObject(Bitmap source_img, string path_template, double threshold = 0.95)
+        public static Position FindObject(Bitmap sourceBitmap, Bitmap templateBitmap, double threshold = 0.95)
         {
             Position res = new Position();
 
-            using (Image<Bgr, byte> source = source_img.ToImage<Bgr, byte>()) // Image B
-            using (Image<Bgr, byte> template = new Image<Bgr, byte>(path_template)) // Image A
+            using (Image<Bgr, byte> source = sourceBitmap.ToImage<Bgr, byte>()) // Image B
+            using (Image<Bgr, byte> template = templateBitmap.ToImage<Bgr, byte>()) // Image A
             using (Image<Gray, float> result = source.MatchTemplate(template, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed))
             {
                 double[] minValues, maxValues;
@@ -45,6 +45,12 @@ namespace TradeBotSharedLib.Services
             }
 
             return res;
+        }
+
+
+        public static Position FindObject(Bitmap source_img, string path_template, double threshold = 0.95)
+        {
+            return FindObject(source_img, new Bitmap(path_template), threshold);
         }
 
         public static List<Position> FindObjects(Bitmap source_img, string path_template, double threshold = 0.95)

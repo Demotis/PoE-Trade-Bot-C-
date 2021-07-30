@@ -72,10 +72,12 @@
     <Compile Include="Models\CustomerInfo.cs" />
     <Compile Include="Models\FossilsJson.cs" />
     <Compile Include="Models\FoundPlace.cs" />
+    <Compile Include="Models\InventoryConfig.cs" />
     <Compile Include="Models\MapsJson.cs" />
     <Compile Include="Models\POEUIConfig.cs" />
     <Compile Include="Models\Position.cs" />
     <Compile Include="Models\ResonatorsJson.cs" />
+    <Compile Include="Models\TabConfig.cs" />
     <Compile Include="Models\Test\Cell.cs" />
     <Compile Include="Models\Test\Item.cs" />
     <Compile Include="Models\Test\Tab.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Services\Win32.cs" />
     <Compile Include="Statics.cs" />
     <Compile Include="Utilities\BotEngineUtils.cs" />
+    <Compile Include="Utilities\ClientConfiguration.cs" />
     <Compile Include="Utilities\ConfigManager.cs" />
     <Compile Include="Utilities\CurrencyTabPositions.cs" />
     <Compile Include="Utilities\Extensions.cs" />

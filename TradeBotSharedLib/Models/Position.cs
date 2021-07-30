@@ -1,9 +1,20 @@
 ﻿using System;
+using System.Drawing;
 
 namespace TradeBotSharedLib.Models
 {
     public class Position
     {
+        public Point MousePoint
+        {
+            get { return new Point(Left, Top); }
+            set
+            {
+                Left = value.X;
+                Top = value.Y;
+            }
+        }
+
         public int Left { get; set; } = -1;
 
         public int Top { get; set; } = -1;
